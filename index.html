@@ -477,7 +477,15 @@ $('card').addEventListener('click',e=>{
 function voltaSala(){modo='treino';fixo=false;resize();mostraCtrl();if(net.role==='host')telaLobbyHost();else telaLobbyGuest();novo(0);st.estado='parado'}
 
 // ================= CONVERSAS (mensagens guardadas no Firebase) =================
-const FIREBASE_CONFIG=null;
+const FIREBASE_CONFIG={
+  apiKey:"AIzaSyDIjAkjHGKqEnTqhiLlKCcKlPB3R1dFzM4",
+  authDomain:"entrega-9e707.firebaseapp.com",
+  databaseURL:"https://entrega-9e707-default-rtdb.firebaseio.com",
+  projectId:"entrega-9e707",
+  storageBucket:"entrega-9e707.firebasestorage.app",
+  messagingSenderId:"592757076251",
+  appId:"1:592757076251:web:729684af9d34090b6623be"
+};
 const FBV='10.14.1';
 const fb={pronto:false,uid:null,api:null,erro:null,
   async iniciar(){
