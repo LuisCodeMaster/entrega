@@ -90,6 +90,12 @@
   .chDica{font-size:12px;opacity:.55;text-align:center;padding:0 0 8px;background:#111733}
   #toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:9;background:#5cf0a8;color:#08321d;font-weight:800;padding:8px 16px;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
   .convs{display:flex;flex-direction:column;gap:8px;margin-top:12px;text-align:left}
+  .convItem{display:flex;gap:6px}.convItem>button:first-child{flex:1;min-width:0}
+  .convs .lixo{width:48px;flex:0 0 48px;justify-content:center;padding:0;font-size:18px}
+  .m .mais{margin:0 0 0 4px;padding:0 6px;width:auto;font-size:14px;line-height:1.2;background:rgba(0,0,0,.25);color:#fff;box-shadow:none;border-radius:8px}
+  .mMenu{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .mMenu button{margin:0!important;flex:1;font-size:13px!important;padding:6px!important;background:#2f3d7a;color:#fff;box-shadow:none!important}
+  button.perigo,.mMenu button.perigo{background:#ff4d6d;color:#fff;box-shadow:0 5px 0 #a8253f}
   .convs button{margin:0;display:flex;justify-content:space-between;align-items:center;gap:8px;background:#232b52;color:#fff;box-shadow:0 4px 0 #161c3a;font-size:16px;text-align:left;padding:10px 12px}
   .convs button small{display:block;font-weight:500;font-size:13px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
   .badge{background:#ff4d6d;color:#fff;border-radius:10px;padding:0 8px;font-size:13px}
@@ -481,7 +487,7 @@ $('card').addEventListener('click',e=>{
     const rota=J.rota==='ida'?'volta':'ida';J=novaJornada(J.para,J.de,t,rota,J.rodada+1);modo='jornada';jogarJ();
   }
   if(a==='menu')menu();
-  if(acaoConversa(a,n))return;
+  if(['novaConv','entrarConv','abrirConv','entrarConvLink','tentarChat','cancelarChat','lixoConv','remConv','remConvTudo'].includes(a)){acaoConversa(a,n);return}
   if(a==='visual')telaVisual();
   if(a==='skin'){const [k,v]=n.split(':');perfil[k]=v;salvaPerfil();telaVisual()}
   if(a==='nada'){const it=[...CORES_ENV,...RASTROS,...CARAS].find(x=>n.endsWith(':'+x.id));if(it)toast('🔒 Precisa de '+it.p+' pontos')}
@@ -532,6 +538,9 @@ const fb={pronto:false,uid:null,api:null,erro:null,
       entrar:(cid,nome)=>D.set(r(`conversas/${cid}/membros/${this.uid}`),{nome,t:D.serverTimestamp()}),
       enviar:(cid,m)=>D.push(r(`conversas/${cid}/msgs`),{...m,de:this.uid,t:D.serverTimestamp()}),
       ouvir:(cid,cb)=>D.onChildAdded(D.query(r(`conversas/${cid}/msgs`),D.limitToLast(200)),s=>cb(s.key,s.val())),
+      ouvirRem:(cid,cb)=>D.onChildRemoved(D.query(r(`conversas/${cid}/msgs`),D.limitToLast(200)),s=>cb(s.key)),
+      apagar:(cid,mid)=>D.remove(r(`conversas/${cid}/msgs/${mid}`)),
+      minhas:async cid=>{const s=await D.get(r(`conversas/${cid}/msgs`));const a=[];s.forEach(c=>{if(c.val().de===this.uid)a.push(c.key)});return a},
       membros:(cid,cb)=>D.onValue(r(`conversas/${cid}/membros`),s=>cb(s.val()||{})),
       ultima:async cid=>{const s=await D.get(D.query(r(`conversas/${cid}/msgs`),D.limitToLast(1)));let v=null;s.forEach(c=>{v=c.val()});return v},
       rankSalvar:d=>D.set(r(`ranking/${this.uid}`),{...d,t:D.serverTimestamp()}),
@@ -558,7 +567,7 @@ function htmlConversas(){
     <label>…ou cole o link de convite do seu amigo</label>
     <div class="linha"><div style="flex:2"><input id="convLink" placeholder="link ou código"></div><div><button data-a="entrarConvLink" style="margin:0;height:100%">ENTRAR</button></div></div>
     <div class="erro" id="erro"></div>
-    ${convs.length?'<label>Suas conversas</label><div class="convs">'+convs.map(c=>`<button data-a="abrirConv" data-n="${c.cid}"><span>💬 ${esc(c.outro||'Aguardando amigo…')}<small id="prev-${c.cid}">…</small></span><span id="bdg-${c.cid}"></span></button>`).join('')+'</div>':''}`;
+    ${convs.length?'<label>Suas conversas</label><div class="convs">'+convs.map(c=>`<div class="convItem"><button data-a="abrirConv" data-n="${c.cid}"><span>💬 ${esc(c.outro||'Aguardando amigo…')}<small id="prev-${c.cid}">…</small></span><span id="bdg-${c.cid}"></span></button><button class="lixo" data-a="lixoConv" data-n="${c.cid}" title="Apagar conversa">🗑️</button></div>`).join('')+'</div>':''}`;
 }
 async function carregaPrevias(){
   try{await fb.iniciar()}catch(e){return}
@@ -571,7 +580,19 @@ async function carregaPrevias(){
   }
 }
 function pegaNome(){const i=$('meuNome');const n=((i&&i.value.trim())||ls.get('entrega_nome','')||'Jogador').slice(0,12);ls.set('entrega_nome',n);return n}
-function acaoConversa(a,n){
+async function acaoConversa(a,n){
+  if(a==='lixoConv'){const c=listaConvs().find(x=>x.cid===n);
+    painel(`<div class="grande">🗑️</div><h2>Apagar conversa${c&&c.outro?' com '+esc(c.outro):''}?</h2>
+      <p style="font-size:14px">"Só da minha lista" tira a conversa daqui, mas seu amigo continua vendo tudo.<br>"Apagar minhas mensagens" também apaga pra ele tudo que <b>você</b> mandou. Não dá pra desfazer.</p>
+      <div class="erro" id="erro"></div>
+      <button class="sec" data-a="remConv" data-n="${n}">Só da minha lista</button>
+      <button class="perigo" data-a="remConvTudo" data-n="${n}">Apagar minhas mensagens e remover</button>
+      <button class="sec" data-a="aba" data-n="conversas">Cancelar</button>`);return true}
+  if(a==='remConv'||a==='remConvTudo'){
+    if(a==='remConvTudo'){erro('Apagando…');try{await fb.iniciar();const ids=await fb.api.minhas(n);for(const id of ids)await fb.api.apagar(n,id)}catch(e){erro('Não consegui apagar as mensagens. Confira a internet.');return true}}
+    ls.set('entrega_convs',JSON.stringify(listaConvs().filter(x=>x.cid!==n)));
+    if(ch.cid===n){ch.desliga.forEach(f=>{try{f()}catch(e){}});ch.cid=null}
+    aba='conversas';telaInicio();toast(a==='remConvTudo'?'🗑️ Conversa e suas mensagens apagadas':'Conversa removida da lista');return true}
   if(a==='novaConv'){pegaNome();const cid=novoCid();salvaConv(cid,{outro:'',criei:true});abrirChat(cid,true);return true}
   if(a==='entrarConv'||a==='abrirConv'){pegaNome();abrirChat(n);return true}
   if(a==='entrarConvLink'){pegaNome();const cid=cidDe($('convLink').value.trim());if(!cid){erro('Link inválido. Cole o link inteiro que seu amigo mandou.');return true}abrirChat(cid);return true}
@@ -589,6 +610,7 @@ async function abrirChat(cid,novo){
   try{await fb.api.entrar(cid,ls.get('entrega_nome','Jogador'))}catch(e){erro('Não consegui entrar nessa conversa.');return}
   ch.desliga.push(fb.api.membros(cid,m=>{ch.membros=m;const o=Object.entries(m).find(([u])=>u!==fb.uid);
     if(o){ch.outro=o[1].nome;salvaConv(cid,{outro:ch.outro})}if(ch.aberto)topoChat()}));
+  ch.desliga.push(fb.api.ouvirRem(cid,id=>{ch.ids.delete(id);ch.msgs=ch.msgs.filter(m=>m.id!==id);if(ch.menuMsg===id)ch.menuMsg=null;if(ch.aberto)renderMsgs()}));
   ch.desliga.push(fb.api.ouvir(cid,(id,m)=>{if(ch.ids.has(id))return;ch.ids.add(id);ch.msgs.push({id,...m});
     if(ch.aberto){renderMsgs();if(m.de!==fb.uid){marcaVisto();if(document.hidden)document.title='💬 Nova mensagem — ENTREGA!'}}}));
   mostraChat();if(novo)mostraConvite(true);
@@ -612,18 +634,28 @@ function mostraConvite(forca){
   box.classList.remove('oculta');
 }
 function fmtHora(t){if(!t)return'';const d=new Date(t);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+function ocultas(){try{return JSON.parse(ls.get('entrega_ocultas','{}'))}catch(e){return{}}}
+function oculta(mid){const o=ocultas();o[mid]=1;ls.set('entrega_ocultas',JSON.stringify(o))}
+function menuMsgHtml(m){
+  if(ch.menuMsg!==m.id)return '';
+  const minha=m.de===fb.uid,conf=ch.confirma===m.id;
+  return `<div class="mMenu">${minha?`<button class="perigo" data-c="${conf?'apagarTodos':'confApagar'}" data-id="${m.id}">${conf?'Tem certeza? Apagar':'🗑️ Apagar pra todos'}</button>`:''}
+    <button data-c="apagarMim" data-id="${m.id}">🙈 Apagar pra mim</button><button data-c="fechaMenu">Cancelar</button></div>`;
+}
 function adivs(){try{return JSON.parse(ls.get('entrega_adiv','{}'))}catch(e){return{}}}
 function renderMsgs(){
   const box=$('chLista');const fim=box.scrollHeight-box.scrollTop-box.clientHeight<80;
   if(!ch.msgs.length){box.innerHTML=`<div class="chVazio">Nenhuma mensagem ainda.<br>Escreva algo aí embaixo e entregue jogando! ✉️</div>`;return}
-  const ad=adivs();let html='',dia='';
-  for(const m of ch.msgs){
+  const ad=adivs(),oc=ocultas();let html='',dia='';
+  const vis=ch.msgs.filter(m=>!oc[m.id]);
+  if(!vis.length){box.innerHTML=`<div class="chVazio">Nenhuma mensagem pra mostrar.<br>Escreva algo aí embaixo e entregue jogando! ✉️</div>`;return}
+  for(const m of vis){
     const d=m.t?new Date(m.t).toLocaleDateString('pt-BR'):'';if(d&&d!==dia){dia=d;html+=`<div class="chData">${d}</div>`}
     const hora=m.t?new Date(m.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
     const selo=(m.chefe?'👑 ':'')+`✓✓ ${m.pct}%`;
     const mim=m.mimo&&MIMOS[m.mimo]?`<div class="mimo">🎁 ${m.de===fb.uid?'você mandou':'mandou junto'}: ${MIMOS[m.mimo].e} ${MIMOS[m.mimo].n}</div>`:'';
     if(m.de===fb.uid){
-      html+=`<div class="m eu"><div class="txt">${esc(m.vis)}</div>${m.vis!==m.txt?`<div class="orig">você escreveu: ${esc(m.txt)}</div>`:''}${mim}<div class="meta">${hora} · ${selo}</div></div>`;
+      html+=`<div class="m eu"><div class="txt">${esc(m.vis)}</div>${m.vis!==m.txt?`<div class="orig">você escreveu: ${esc(m.txt)}</div>`:''}${mim}<div class="meta">${hora} · ${selo} <button class="mais" data-c="menuMsg" data-id="${m.id}">⋯</button></div>${menuMsgHtml(m)}</div>`;
     }else{
       const g=ad[m.id];
       let extra='';
@@ -632,15 +664,21 @@ function renderMsgs(){
         else if(ch.adivinhando===m.id)extra=`<input id="palpite" maxlength="80" value="${esc(m.vis.replace(/_/g,''))}"><button data-c="conferir" data-id="${m.id}">CONFERIR ✓</button>`;
         else extra=`<button data-c="adivinhar" data-id="${m.id}">🤔 Adivinhar</button>`;
       }
-      html+=`<div class="m ele"><div class="txt">${esc(m.vis)}</div>${extra}${mim}<div class="meta">${esc(m.nome)} · ${hora} · ${selo}</div></div>`;
+      html+=`<div class="m ele"><div class="txt">${esc(m.vis)}</div>${extra}${mim}<div class="meta">${esc(m.nome)} · ${hora} · ${selo} <button class="mais" data-c="menuMsg" data-id="${m.id}">⋯</button></div>${menuMsgHtml(m)}</div>`;
     }
   }
-  box.innerHTML=html;if(fim||!box.dataset.vis){box.scrollTop=box.scrollHeight;box.dataset.vis=1}
+  box.innerHTML=html;if((fim||!box.dataset.vis)&&!ch.menuMsg){box.scrollTop=box.scrollHeight;box.dataset.vis=1}
 }
 function toast(t){const e=$('toast');e.textContent=t;e.classList.remove('oculta');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.add('oculta'),2600)}
 $('chat').addEventListener('click',async e=>{
   const b=e.target.closest('[data-c]');if(!b)return;const c=b.dataset.c;
   if(c==='voltar'){fechaChat();menu();return}
+  if(c==='menuMsg'){ch.menuMsg=ch.menuMsg===b.dataset.id?null:b.dataset.id;ch.confirma=null;renderMsgs();return}
+  if(c==='fechaMenu'){ch.menuMsg=ch.confirma=null;renderMsgs();return}
+  if(c==='confApagar'){ch.confirma=b.dataset.id;renderMsgs();return}
+  if(c==='apagarMim'){oculta(b.dataset.id);ch.menuMsg=null;renderMsgs();toast('🙈 Apagada só pra você');return}
+  if(c==='apagarTodos'){const id=b.dataset.id;ch.menuMsg=ch.confirma=null;
+    try{await fb.api.apagar(ch.cid,id);toast('🗑️ Mensagem apagada pra todos')}catch(e){toast('⚠️ Não consegui apagar. Confira a internet.')}return}
   if(c==='mimo'){const box=$('chMimos');if(!box.classList.contains('oculta')){box.classList.add('oculta');return}
     box.innerHTML='<div class="tit">Mande junto com a mensagem. Vale pra próxima entrega de '+esc(ch.outro||'seu amigo')+'!</div>'+
       Object.entries(MIMOS).map(([k,m])=>`<button data-c="escMimo" data-id="${k}" class="${k==='vida'||k==='escudo'?'bom ':''}${mimoSel===k?'on':''}"><b>${m.e}</b>${m.n}</button>`).join('')+
