@@ -55,8 +55,8 @@ T = [
  # ---------- mimos, efeitos, visuais ----------
  ("const EFEITOS={coracao:'❤️ = +1 VIDA',fogo:'🔥 = TIRO DE FOGO',risada:'😂 = ESCUDO',kkk:'KKKK = BÔNUS DE RISADA',socorro:'SOCORRO?! UM MINI-CHEFE OUVIU…',pergunta:'❓ PERGUNTA TEM PRESSA: CAMINHO CURTO'};",
   "const EFEITOS={coracao:'❤️ = +1 LIFE',fogo:'🔥 = FIRE SHOT',risada:'😂 = SHIELD',kkk:'LOL = LAUGH BONUS',socorro:'HELP?! A MINI-BOSS HEARD YOU…',pergunta:'❓ QUESTIONS ARE IN A HURRY: SHORT PATH'};"),
- ("inv:{e:'😈',n:'controles invertidos'},neblina:{e:'🌫️',n:'neblina'},tubarao:{e:'🦈',n:'cardume de tubarões'},lento:{e:'🐌',n:'mensagem pesada'},vida:{e:'❤️',n:'vida extra'},escudo:{e:'🛡️',n:'escudo'}",
-  "inv:{e:'😈',n:'reversed controls'},neblina:{e:'🌫️',n:'fog'},tubarao:{e:'🦈',n:'shark swarm'},lento:{e:'🐌',n:'heavy message'},vida:{e:'❤️',n:'extra life'},escudo:{e:'🛡️',n:'shield'}"),
+ ("inv:{e:'😈',n:'controles invertidos'},neblina:{e:'🌫️',n:'neblina'},tubarao:{e:'🦈',n:'cardume de tubarões'},lento:{e:'🐌',n:'mensagem pesada'},vida:{e:'❤️',n:'vida extra'},escudo:{e:'🛡️',n:'escudo'},sat:{e:'🛰️',n:'rota por satélite'}",
+  "inv:{e:'😈',n:'reversed controls'},neblina:{e:'🌫️',n:'fog'},tubarao:{e:'🦈',n:'shark swarm'},lento:{e:'🐌',n:'heavy message'},vida:{e:'❤️',n:'extra life'},escudo:{e:'🛡️',n:'shield'},sat:{e:'🛰️',n:'satellite route'}"),
  ("{id:'branco',n:'Branco',", "{id:'branco',n:'White',"), ("{id:'azul',n:'Céu',", "{id:'azul',n:'Sky',"),
  ("{id:'rosa',n:'Chiclete',", "{id:'rosa',n:'Bubblegum',"), ("{id:'menta',n:'Menta',", "{id:'menta',n:'Mint',"),
  ("{id:'ouro',n:'Dourado',", "{id:'ouro',n:'Gold',"), ("{id:'arco',n:'Arco-íris',p:6000", "{id:'arco',n:'Rainbow',p:6000"),
@@ -384,6 +384,22 @@ T = [
  ("celular(sx,H/2,dados.de||'Você','#5cf0a8')", "celular(sx,H/2,dados.de||'You','#5cf0a8')"),
  ("celular(W+80-(W*0.2+80)*k,H/2,dados.para||'Destino','#ff9ad5')", "celular(W+80-(W*0.2+80)*k,H/2,dados.para||'Destination','#ff9ad5')"),
  ("J=novaJornada(ls.get('entrega_nome','Eu'),ch.outro||'Amigo',txt,'ida');", "J=novaJornada(ls.get('entrega_nome','Me'),ch.outro||'Friend',txt,'ida');"),
+ # ---------- caminhos de conexão ----------
+ ("{id:'g4',e:'📶',n:'4G / 5G',v:'Rápido',p:'Zonas mortas: o sinal despenca'", "{id:'g4',e:'📶',n:'4G / 5G',v:'Fast',p:'Dead zones: signal drops hard'"),
+ ("{id:'cabo',e:'🔌',n:'Cabo / fibra',v:'Quase não perde sinal',p:'Caminho estreito, ratos e obras'", "{id:'cabo',e:'🔌',n:'Cable / fiber',v:'Barely loses signal',p:'Narrow path, rats and roadworks'"),
+ ("{id:'wifi',e:'📡',n:'Wi-Fi',v:'Muito sinal pra pegar',p:'Interferência embaralha os controles'", "{id:'wifi',e:'📡',n:'Wi-Fi',v:'Lots of signal to grab',p:'Interference scrambles the controls'"),
+ ("{id:'sat',e:'🛰️',n:'Satélite',v:'Caminho bem mais curto',p:'Controles com atraso'", "{id:'sat',e:'🛰️',n:'Satellite',v:'Much shorter path',p:'Delayed controls'"),
+ ("{id:'bt',e:'🔵',n:'Bluetooth',v:'Curtinho e fácil',p:'Só mensagem de até 20 letras'", "{id:'bt',e:'🔵',n:'Bluetooth',v:'Short and easy',p:'Only messages up to 20 letters'"),
+ ("{id:'radio',e:'📻',n:'Rádio / 2G raiz',v:'Modo nostalgia, devagar',p:'Chiado esconde as letras'", "{id:'radio',e:'📻',n:'Radio / old-school 2G',v:'Nostalgia mode, slow',p:'Static hides the letters'"),
+ ("toast(canalDe(forcado).e+' Te mandaram por '+canalDe(forcado).n+'!')", "toast(canalDe(forcado).e+' You were sent via '+canalDe(forcado).n+'!')"),
+ ("painel(`<h2>Por onde vai sua mensagem?</h2>", "painel(`<h2>Which way will your message go?</h2>"),
+ ("${real?`📍 Você está no <b>${canalDe(real).e} ${canalDe(real).n}</b> agora. Indo por ele: <b>+20% de pontos</b>!`:'Escolha o caminho. Cada um tem vantagem e perigo.'}", "${real?`📍 You are on <b>${canalDe(real).e} ${canalDe(real).n}</b> right now. Going through it: <b>+20% points</b>!`:'Pick the route. Each one has an upside and a danger.'}"),
+ ('<button class="sec" data-a="canalVolta">VOLTAR</button>', '<button class="sec" data-a="canalVolta">BACK</button>'),
+ ("if(st.cvReal)av.push('📍 CONEXÃO REAL: +20% PONTOS');", "if(st.cvReal)av.push('📍 REAL CONNECTION: +20% POINTS');"),
+ ("toast('🔵 Bluetooth só leva mensagem de até 20 letras')", "toast('🔵 Bluetooth only carries messages up to 20 letters')"),
+ ("ctx.fillText('📵 ZONA MORTA',z.x+z.w/2,H/2)", "ctx.fillText('📵 DEAD ZONE',z.x+z.w/2,H/2)"),
+ ("ctx.fillText('📡 INTERFERÊNCIA!',W/2,H*.2)", "ctx.fillText('📡 INTERFERENCE!',W/2,H*.2)"),
+ ("ctx.fillText('🛰️ atraso de 0,45s',st.x,st.y+40)", "ctx.fillText('🛰️ 0.45s delay',st.x,st.y+40)"),
 ]
 
 T.sort(key=lambda p: -len(p[0]))
