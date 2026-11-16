@@ -78,7 +78,14 @@
   .chData{align-self:center;font-size:12px;opacity:.55;margin:4px 0}
   .chVazio{margin:auto;text-align:center;opacity:.7;font-size:15px;padding:20px}
   .chBarra{display:flex;gap:8px;padding:10px;background:#111733;border-top:2px solid #2f3d7a}
-  .chBarra input{flex:1}
+  .chBarra input{flex:1;min-width:0}
+  .chBarra .chMimo{background:#2f3d7a;color:#fff;box-shadow:0 4px 0 #1b2550}
+  #chMimos{background:#1b2550;border-top:2px solid #2f3d7a;padding:10px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  #chMimos .tit{grid-column:1/-1;font-size:13px;opacity:.8;text-align:center}
+  #chMimos button{margin:0;padding:6px 2px;font-size:12px;line-height:1.15;border-radius:10px;background:#2f3d7a;color:#fff;box-shadow:none}
+  #chMimos button b{display:block;font-size:22px}
+  #chMimos button.bom{background:#1f6f4f}#chMimos button.on{outline:3px solid #ffd24d}
+  .m .mimo{font-size:13px;margin-top:4px;background:rgba(0,0,0,.2);border-radius:8px;padding:3px 6px}
   .chBarra button{margin:0;width:54px;padding:0;font-size:22px;border-radius:14px}
   .chDica{font-size:12px;opacity:.55;text-align:center;padding:0 0 8px;background:#111733}
   #toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:9;background:#5cf0a8;color:#08321d;font-weight:800;padding:8px 16px;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
@@ -104,7 +111,8 @@
   <div class="chTopo"><button class="chVolta" data-c="voltar">←</button><div class="chNome"><b id="chNome">…</b><small id="chSub"></small></div><button class="chConv" data-c="convidar">🔗</button></div>
   <div id="chConvite" class="oculta"></div>
   <div id="chLista"></div>
-  <div class="chBarra"><input id="chTexto" maxlength="60" placeholder="Escreva sua mensagem…" autocomplete="off"><button data-c="enviar">➤</button></div>
+  <div id="chMimos" class="oculta"></div>
+  <div class="chBarra"><button id="btnMimo" class="chMimo" data-c="mimo" title="Presente ou pegadinha">🎁</button><input id="chTexto" maxlength="60" placeholder="Escreva sua mensagem…" autocomplete="off"><button data-c="enviar">➤</button></div>
   <div class="chDica">Cada mensagem é entregue jogando. Dano estraga letras! 🎮</div>
 </div>
 <div id="toast" class="oculta"></div>
@@ -150,13 +158,19 @@ const CORTE=3;
 // ================= JORNADA =================
 let J=null,modo='treino',nivelSel=0,liberado=+ls.get('entrega_lib',0);
 function novaJornada(de,para,txt,rota,rodada){return {v:1,de,para,txt,rota,rodada:rodada||1,pos:0,c:[],vidas:3,sinal:100,pts:0,falhas:0}}
+const SEG=(typeof Intl!=='undefined'&&Intl.Segmenter)?new Intl.Segmenter('pt'):null;
+const _pc={};
+function partes(t){return _pc[t]||(_pc[t]=SEG?Array.from(SEG.segment(t),x=>x.segment):Array.from(t))}
+function letrasJ(){return partes(J.txt)}
+const ehLetra=p=>p.trim()!=='';
 function corromper(qtd){
-  const livres=[];for(let i=0;i<J.txt.length;i++)if(J.txt[i]!==' '&&!J.c.includes(i))livres.push(i);
+  const L=letrasJ(),livres=[];L.forEach((p,i)=>{if(ehLetra(p)&&!J.c.includes(i))livres.push(i)});
   for(let k=0;k<qtd&&livres.length;k++){const j=Math.floor(R()*livres.length);J.c.push(livres.splice(j,1)[0])}
 }
-function perdaPorDano(){return Math.max(1,Math.round(J.txt.replace(/ /g,'').length*0.07))}
-function textoEstragado(){let s='';for(let i=0;i<J.txt.length;i++)s+=J.c.includes(i)?'_':J.txt[i];return s}
-function pctInteiro(){const n=J.txt.replace(/ /g,'').length;return n?Math.round((1-J.c.length/n)*100):100}
+function nLetras(){return letrasJ().filter(ehLetra).length}
+function perdaPorDano(){return Math.max(1,Math.round(nLetras()*0.07))}
+function textoEstragado(){return letrasJ().map((p,i)=>J.c.includes(i)?'_':p).join('')}
+function pctInteiro(){const n=nLetras();return n?Math.round((1-J.c.length/n)*100):100}
 const CH='ENTREGA-PACOTE';
 function codifica(o){
   const b=new TextEncoder().encode(JSON.stringify(o));
@@ -541,8 +555,8 @@ function acaoConversa(a,n){
   if(a==='novaConv'){pegaNome();const cid=novoCid();salvaConv(cid,{outro:'',criei:true});abrirChat(cid,true);return true}
   if(a==='entrarConv'||a==='abrirConv'){pegaNome();abrirChat(n);return true}
   if(a==='entrarConvLink'){pegaNome();const cid=cidDe($('convLink').value.trim());if(!cid){erro('Link inválido. Cole o link inteiro que seu amigo mandou.');return true}abrirChat(cid);return true}
-  if(a==='tentarChat'){corromper(perdaPorDano()*2);iniciaEntrega(J.txt,true);return true}
-  if(a==='cancelarChat'){mostraChat();$('chTexto').value=J?J.txt:'';return true}
+  if(a==='tentarChat'){iniciaEntrega(J.txt,st.mimoEnviar);return true}
+  if(a==='cancelarChat'){const mi=st.mimoEnviar;mostraChat();$('chTexto').value=J?J.txt:'';mimoSel=mi;atualizaMimoBtn();return true}
   return false;
 }
 async function abrirChat(cid,novo){
@@ -587,8 +601,9 @@ function renderMsgs(){
     const d=m.t?new Date(m.t).toLocaleDateString('pt-BR'):'';if(d&&d!==dia){dia=d;html+=`<div class="chData">${d}</div>`}
     const hora=m.t?new Date(m.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
     const selo=(m.chefe?'👑 ':'')+`✓✓ ${m.pct}%`;
+    const mim=m.mimo&&MIMOS[m.mimo]?`<div class="mimo">🎁 ${m.de===fb.uid?'você mandou':'mandou junto'}: ${MIMOS[m.mimo].e} ${MIMOS[m.mimo].n}</div>`:'';
     if(m.de===fb.uid){
-      html+=`<div class="m eu"><div class="txt">${esc(m.vis)}</div>${m.vis!==m.txt?`<div class="orig">você escreveu: ${esc(m.txt)}</div>`:''}<div class="meta">${hora} · ${selo}</div></div>`;
+      html+=`<div class="m eu"><div class="txt">${esc(m.vis)}</div>${m.vis!==m.txt?`<div class="orig">você escreveu: ${esc(m.txt)}</div>`:''}${mim}<div class="meta">${hora} · ${selo}</div></div>`;
     }else{
       const g=ad[m.id];
       let extra='';
@@ -597,7 +612,7 @@ function renderMsgs(){
         else if(ch.adivinhando===m.id)extra=`<input id="palpite" maxlength="80" value="${esc(m.vis.replace(/_/g,''))}"><button data-c="conferir" data-id="${m.id}">CONFERIR ✓</button>`;
         else extra=`<button data-c="adivinhar" data-id="${m.id}">🤔 Adivinhar</button>`;
       }
-      html+=`<div class="m ele"><div class="txt">${esc(m.vis)}</div>${extra}<div class="meta">${esc(m.nome)} · ${hora} · ${selo}</div></div>`;
+      html+=`<div class="m ele"><div class="txt">${esc(m.vis)}</div>${extra}${mim}<div class="meta">${esc(m.nome)} · ${hora} · ${selo}</div></div>`;
     }
   }
   box.innerHTML=html;if(fim||!box.dataset.vis){box.scrollTop=box.scrollHeight;box.dataset.vis=1}
@@ -606,6 +621,11 @@ function toast(t){const e=$('toast');e.textContent=t;e.classList.remove('oculta'
 $('chat').addEventListener('click',async e=>{
   const b=e.target.closest('[data-c]');if(!b)return;const c=b.dataset.c;
   if(c==='voltar'){fechaChat();menu();return}
+  if(c==='mimo'){const box=$('chMimos');if(!box.classList.contains('oculta')){box.classList.add('oculta');return}
+    box.innerHTML='<div class="tit">Mande junto com a mensagem. Vale pra próxima entrega de '+esc(ch.outro||'seu amigo')+'!</div>'+
+      Object.entries(MIMOS).map(([k,m])=>`<button data-c="escMimo" data-id="${k}" class="${k==='vida'||k==='escudo'?'bom ':''}${mimoSel===k?'on':''}"><b>${m.e}</b>${m.n}</button>`).join('')+
+      `<button data-c="escMimo" data-id=""><b>✖️</b>nada</button>`;box.classList.remove('oculta');return}
+  if(c==='escMimo'){mimoSel=b.dataset.id||null;atualizaMimoBtn();if(mimoSel)toast(MIMOS[mimoSel].e+' vai junto com a próxima mensagem');return}
   if(c==='convidar'){mostraConvite();return}
   if(c==='copiar'){copiar();return}
   if(c==='enviar'){const t=$('chTexto').value.trim();if(!t.replace(/\s/g,'').length)return;
@@ -618,28 +638,49 @@ $('chat').addEventListener('click',async e=>{
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)document.title='Entrega! — A Jornada da Mensagem'});
 $('chTexto').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.querySelector('[data-c="enviar"]').click()}});
-function iniciaEntrega(txt,repetir){
-  if(!repetir)J=novaJornada(ls.get('entrega_nome','Eu'),ch.outro||'Amigo',txt,'ida');
-  const minhas=ch.msgs.filter(m=>m.de===fb.uid).length;
-  const comChefe=(minhas+1)%4===0;
+const EFEITOS={coracao:'❤️ = +1 VIDA',fogo:'🔥 = TIRO DE FOGO',risada:'😂 = ESCUDO',kkk:'KKKK = BÔNUS DE RISADA',socorro:'SOCORRO?! UM MINI-CHEFE OUVIU…',pergunta:'❓ PERGUNTA TEM PRESSA: CAMINHO CURTO'};
+function efeitosDoTexto(t){const l=t.toLowerCase(),e=[];
+  if(/❤|♥|💖|💕|💗|😍|🥰/.test(t))e.push('coracao');
+  if(/🔥/.test(t))e.push('fogo');
+  if(/😂|🤣/.test(t))e.push('risada');
+  if(/k{3,}|(ha){2,}|(rs){2,}/.test(l))e.push('kkk');
+  if(/socorro|help/.test(l))e.push('socorro');
+  if(/\?/.test(t))e.push('pergunta');
+  return e}
+const MIMOS={inv:{e:'😈',n:'controles invertidos'},neblina:{e:'🌫️',n:'neblina'},tubarao:{e:'🦈',n:'cardume de tubarões'},lento:{e:'🐌',n:'mensagem pesada'},vida:{e:'❤️',n:'vida extra'},escudo:{e:'🛡️',n:'escudo'}};
+let mimoSel=null;
+function mimoRecebido(){for(let i=ch.msgs.length-1;i>=0;i--){const m=ch.msgs[i];if(m.de===fb.uid)return null;if(m.mimo&&MIMOS[m.mimo])return m}return null}
+function iniciaEntrega(txt,mimoEnviar=mimoSel){
+  J=novaJornada(ls.get('entrega_nome','Eu'),ch.outro||'Amigo',txt,'ida');
+  J.c=letrasJ().map((p,i)=>ehLetra(p)?i:-1).filter(i=>i>=0);
+  const ef=efeitosDoTexto(txt),mr=mimoRecebido();
+  const minhas=ch.msgs.filter(m=>m.de===fb.uid).length,chefeVez=(minhas+1)%4===0;
+  const comChefe=chefeVez||ef.includes('socorro');
+  let dist=(comChefe?2400:3200)+J.c.length*70;if(ef.includes('pergunta'))dist*=.75;
   const fase=ch.msgs.length%FASES.length;
   fechaChat();modo='chat';fixo=false;resize();fechaPainel();
   dados={de:J.de,para:J.para};
-  novo(fase,{vidas:3,sinal:100,primeira:true,ultima:true,dist:comChefe?2600:4200,semChefe:!comChefe,hpMul:.6,
-    rotulo:comChefe?'👑 MENSAGEM IMPORTANTE':'ENTREGANDO PRA '+(ch.outro||'SEU AMIGO').toUpperCase()});
-  st.comChefe=comChefe;
+  novo(fase,{vidas:3+(ef.includes('coracao')?1:0)+(mr&&mr.mimo==='vida'?1:0),sinal:100,primeira:true,ultima:true,dist,semChefe:!comChefe,hpMul:chefeVez?.6:.4,
+    rotulo:chefeVez?'👑 MENSAGEM IMPORTANTE':'ENTREGANDO PRA '+(ch.outro||'SEU AMIGO').toUpperCase()});
+  Object.assign(st,{comChefe,efeitos:ef,mimo:mr?mr.mimo:null,mimoEnviar:mimoEnviar||null,letrasPegas:0,
+    fila:J.c.map((i,k)=>({i,ch:letrasJ()[i],d:(k+1)/(J.c.length+1)*dist*0.9})),
+    escudos:(ef.includes('risada')?1:0)+(mr&&mr.mimo==='escudo'?1:0),fogoSempre:ef.includes('fogo'),
+    filaAvisos:['PEGUE AS LETRAS DA SUA MENSAGEM!',...(mr?[esc(mr.nome).toUpperCase()+' TE MANDOU: '+MIMOS[mr.mimo].e+' '+MIMOS[mr.mimo].n.toUpperCase()+'!']:[]),...ef.map(k=>EFEITOS[k])]});
+  mimoSel=null;atualizaMimoBtn();
 }
+function atualizaMimoBtn(){const b=$('btnMimo');if(b)b.textContent=mimoSel?MIMOS[mimoSel].e:'🎁';const box=$('chMimos');if(box)box.classList.add('oculta')}
 async function entregaConcluida(){
-  const pts=Math.round(200+st.vidas*120+st.pegos*30+(st.comChefe?400:0));
+  const pts=Math.round(200+st.vidas*120+st.pegos*30+st.letrasPegas*15+(st.comChefe?400:0)+(st.efeitos.includes('kkk')?150:0));
   const msg={nome:J.de,txt:J.txt.slice(0,120),vis:textoEstragado().slice(0,120),pct:pctInteiro(),pts,fase:st.n,chefe:!!st.comChefe};
+  if(st.mimoEnviar)msg.mimo=st.mimoEnviar;
   try{await fb.api.enviar(ch.cid,msg);mostraChat();toast('✓✓ Entregue '+msg.pct+'%!')}
-  catch(e){mostraChat();$('chTexto').value=J.txt;toast('⚠️ Sem conexão: a mensagem não foi enviada')}
+  catch(e){mostraChat();$('chTexto').value=J.txt;mimoSel=st.mimoEnviar;atualizaMimoBtn();toast('⚠️ Sem conexão: a mensagem não foi enviada')}
 }
 function telaChatPerdeu(motivo){
   painel(`<div class="grande">⚠️</div><h2 class="ruim">A mensagem se perdeu!</h2>
     <p>${motivo==='sinal'?'O sinal acabou':'Ela foi corrompida'} no caminho até ${esc(ch.outro||'seu amigo')}.</p>
     <div class="bolha cinza">${esc(textoEstragado())}</div>
-    <p style="font-size:14px">Tentar de novo estraga mais letras. Se cancelar, ela volta pra caixa de texto.</p>
+    <p style="font-size:14px">Tentar de novo recomeça a entrega (as letras também). Se cancelar, ela volta pra caixa de texto.</p>
     <button data-a="tentarChat">🔁 TENTAR DE NOVO</button>
     <button class="sec" data-a="cancelarChat">CANCELAR</button>`);
 }
@@ -789,8 +830,9 @@ function update(dt){
   let ax=0,ay=0;
   if(keys['arrowup']||keys['w'])ay-=1;if(keys['arrowdown']||keys['s'])ay+=1;
   if(keys['arrowleft']||keys['a'])ax-=1;if(keys['arrowright']||keys['d'])ax+=1;
-  if(toque){st.vx=(toque.x+40-st.x)*9;st.vy=(toque.y-50-st.y)*9}
-  else{st.vx+=ax*1600*dt;st.vy+=ay*1600*dt;st.vx*=Math.pow(.02,dt);st.vy*=Math.pow(.02,dt)}
+  const inv=st.mimo==='inv',pes=st.mimo==='lento'?.38:1;if(inv){ay=-ay;ax=-ax}
+  if(toque){const tx=inv?W-(toque.x+40):toque.x+40,ty=inv?H-(toque.y-50):toque.y-50;st.vx=(tx-st.x)*9*pes;st.vy=(ty-st.y)*9*pes}
+  else{st.vx+=ax*1600*dt*pes;st.vy+=ay*1600*dt*pes;st.vx*=Math.pow(.02,dt);st.vy*=Math.pow(.02,dt)}
   const maxX=correndo?W*0.7:W*0.6;
   st.x=Math.max(30,Math.min(maxX,st.x+st.vx*dt));st.y=Math.max(30,Math.min(H-30,st.y+st.vy*dt));
 
@@ -799,15 +841,19 @@ function update(dt){
   if(st.inv>0)st.inv-=dt;
   if(R()<.8)st.parts.push({x:st.x-22,y:st.y+(R()-.5)*10,vx:-st.vel*.3-R()*60,vy:(R()-.5)*30,v:.6,c:'#5cf0a8',s:3+R()*3});
 
+  if(st.filaAvisos&&st.filaAvisos.length&&st.banner<=.2){st.bannerTxt=st.filaAvisos.shift();st.banner=2.2}
   if(correndo){
     st.dist+=st.vel*dt;
+    if(st.fila){while(st.fila.length&&st.dist+W*0.9>=st.fila[0].d){const l=st.fila.shift();st.itens.push({k:'letra',x:W+30+R()*60,y:60+R()*(H-120),r:20,t:R()*6,i:l.i,ch:l.ch})}}
+    if(st.mimo==='tubarao'&&st.dist<st.distMax*.95){st.tubT=(st.tubT||1.5)-dt;if(st.tubT<=0){st.tubT=1.6+R();st.obs.push({k:'peixe',tub:true,x:W+60,y:60+R()*(H-120),r:22,vx:-200-R()*80})}}
+    if(st.fogoSempre){st.fogo-=dt;if(st.fogo<=0){st.meus.push({x:st.x+24,y:st.y,vx:620,fogo:1});st.fogo=.32}}
     if(st.dist<st.distMax*0.95){st.spawn-=dt;if(st.spawn<=0){gerarObstaculo();st.spawn=Math.max(.5,1.25-st.dist/st.distMax*.5-st.n*.08)*(.8+R()*.4)*(st.online?1.15:1)}}
     st.spawnItem-=dt;if(st.spawnItem<=0){gerarItem();st.spawnItem=1.5+R()*1.1}
     if(st.dist>=st.distMax&&st.obs.length===0){if(st.semChefe){st.estado='chegando';st.fimT=0;st.tiros=[];st.avisos=[]}else iniciaChefe()}
   }else{
     st.spawnItem-=dt;if(st.spawnItem<=0){gerarItem();st.spawnItem=2.2+R()*1.2}
     atualizaChefe(dt);
-    if(!st.boss.entrando){st.fogo-=dt;if(st.fogo<=0){st.meus.push({x:st.x+24,y:st.y,vx:620});st.fogo=.2}}
+    if(!st.boss.entrando){st.fogo-=dt;if(st.fogo<=0){st.meus.push({x:st.x+24,y:st.y,vx:620,fogo:st.fogoSempre?1:0});st.fogo=.2}}
     if(st.online)atualizaPad();
   }
 
@@ -829,7 +875,11 @@ function update(dt){
   st.avisos=st.avisos.filter(a=>a.ativo<.35);
 
   const pr=15;let bate=false;
-  for(const i of st.itens)if(Math.hypot(i.x-st.x,i.y-st.y)<i.r+pr){i.pego=true;st.pegos++;st.sinal=Math.min(100,st.sinal+22);explodir(i.x,i.y,'#4fc3ff',14)}
+  for(const i of st.itens)if(Math.hypot(i.x-st.x,i.y-st.y)<i.r+pr){i.pego=true;
+    if(i.k==='letra'){J.c=J.c.filter(x=>x!==i.i);st.letrasPegas++;explodir(i.x,i.y,'#ffd24d',10);st.pegouT={ch:i.ch,v:.7}}
+    else{st.pegos++;st.sinal=Math.min(100,st.sinal+22);explodir(i.x,i.y,'#4fc3ff',14)}}
+  if(st.fogoSempre&&correndo){for(const m of st.meus)for(const o of st.obs)if(o.k!=='parede'&&!o.morto&&Math.hypot(o.x-m.x,o.y-m.y)<o.r+10){o.morto=m.morto=true;explodir(o.x,o.y,'#ff9a3d',12)}
+    st.obs=st.obs.filter(o=>!o.morto);st.meus=st.meus.filter(m=>!m.morto)}
   for(const o of st.obs){
     if(o.k==='parede'){if(st.x+pr>o.x-o.w/2&&st.x-pr<o.x+o.w/2&&(st.y-pr<o.gy||st.y+pr>o.gy+o.gap))bate=true}
     else if(Math.hypot(o.x-st.x,o.y-st.y)<o.r+pr-4)bate=true;
@@ -842,10 +892,11 @@ function update(dt){
     for(const m of st.meus)if(Math.abs(m.x-b.x)<(b.escudo?72:50)&&Math.abs(m.y-b.y)<(b.escudo?72:56)){
       m.morto=true;
       if(b.escudo){explodir(m.x,m.y,'#9fd8ff',3);continue}
-      b.hp--;b.flash=.08;explodir(m.x,m.y,b.cor,4);
+      b.hp-=m.fogo?2:1;b.flash=.08;explodir(m.x,m.y,m.fogo?'#ff9a3d':b.cor,4);
       if(b.hp<=0){derrotaChefe();return}
     }
   }
+  if(bate&&st.inv<=0&&st.escudos>0){st.escudos--;st.inv=1.2;explodir(st.x,st.y,'#9fd8ff',20);st.banner=1;st.bannerTxt='ESCUDO QUEBROU!';bate=false}
   if(bate&&st.inv<=0){
     st.vidas--;st.inv=1.4;st.shake=.35;st.sinal=Math.max(0,st.sinal-10);explodir(st.x,st.y,'#ff5577',22);
     if(modo!=='treino'&&J){corromper(perdaPorDano());st.letraT=1.2}
@@ -959,13 +1010,17 @@ function celular(x,y,nome,cor){
   ctx.restore();
 }
 function mensagem(){
+  if(st.escudos>0){ctx.strokeStyle='rgba(159,216,255,'+(.55+.3*Math.sin(st.t*7))+')';ctx.lineWidth=4;ctx.beginPath();ctx.arc(st.x,st.y,36,0,7);ctx.stroke()}
+  if(st.pegouT&&st.pegouT.v>0){ctx.globalAlpha=Math.min(1,st.pegouT.v*2);ctx.font='800 22px "Baloo 2", serif';ctx.fillStyle='#ffd24d';ctx.textAlign='center';ctx.fillText('+'+st.pegouT.ch,st.x,st.y-34-(.7-st.pegouT.v)*30);ctx.globalAlpha=1;st.pegouT.v-=1/60}
   if(st.inv>0&&Math.floor(st.t*14)%2)return;
-  ctx.save();ctx.translate(st.x,st.y);ctx.rotate(Math.max(-.35,Math.min(.35,(st.vy||0)*.0012)));
+  const rindo=st.efeitos&&st.efeitos.includes('kkk');
+  ctx.save();ctx.translate(st.x,st.y);ctx.rotate(Math.max(-.35,Math.min(.35,(st.vy||0)*.0012))+(rindo?Math.sin(st.t*22)*.12:0));
   ctx.shadowColor='#5cf0a8';ctx.shadowBlur=18;ctx.fillStyle='#fff';rr(-24,-16,48,32,6);ctx.fill();ctx.shadowBlur=0;
   ctx.strokeStyle='#c9d4e8';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-24,-14);ctx.lineTo(0,4);ctx.lineTo(24,-14);ctx.stroke();
   ctx.fillStyle='#1b2550';ctx.beginPath();ctx.arc(-8,6,2.6,0,7);ctx.arc(8,6,2.6,0,7);ctx.fill();
   ctx.strokeStyle='#1b2550';ctx.lineWidth=2;ctx.beginPath();
-  if(estadoVisivel()==='chefe'){ctx.moveTo(-5,11);ctx.lineTo(5,11)}else ctx.arc(0,9,4,.2,2.9);ctx.stroke();
+  if(rindo){ctx.fillStyle='#1b2550';ctx.beginPath();ctx.arc(0,9,6,0,Math.PI);ctx.fill()}
+  else if(estadoVisivel()==='chefe'){ctx.moveTo(-5,11);ctx.lineTo(5,11)}else ctx.arc(0,9,4,.2,2.9);ctx.stroke();
   ctx.restore();
   if(st.letraT>0){ctx.globalAlpha=Math.min(1,st.letraT);ctx.font='800 16px "Baloo 2"';ctx.fillStyle='#ff6b8a';ctx.textAlign='center';ctx.fillText('letras perdidas!',st.x,st.y-30-(1.2-st.letraT)*20);ctx.globalAlpha=1;st.letraT-=1/60}
 }
@@ -985,12 +1040,16 @@ function desenhaObs(){
       if(o.k==='spam'){ctx.fillStyle='rgba(255,60,90,.25)';ctx.beginPath();ctx.arc(0,0,o.r+6,0,7);ctx.fill()}
       ctx.font=(o.r*2)+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';
       if(o.k==='peixe')ctx.scale(-1,1);
-      ctx.fillText({virus:'🦠',spam:'📧',peixe:'🐟'}[o.k],0,2);
+      ctx.fillText(o.tub?'🦈':{virus:'🦠',spam:'📧',peixe:'🐟'}[o.k],0,2);
       if(o.k==='spam'){ctx.font='800 10px "Baloo 2"';ctx.fillStyle='#ff4d6d';ctx.fillText('SPAM',0,o.r+10)}
       ctx.restore();
     }
   }
   for(const i of st.itens){
+    if(i.k==='letra'){ctx.save();ctx.translate(i.x,i.y+Math.sin(st.t*3+i.t)*5);ctx.rotate(Math.sin(st.t*2+i.t)*.15);
+      ctx.shadowColor='#ffd24d';ctx.shadowBlur=14;ctx.fillStyle='#fff7d6';rr(-17,-19,34,38,8);ctx.fill();ctx.shadowBlur=0;
+      ctx.strokeStyle='#ffb13b';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#3a2a00';ctx.font='800 24px "Baloo 2", serif';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(i.ch,0,2);ctx.restore();continue}
     ctx.save();ctx.translate(i.x,i.y+Math.sin(st.t*4+i.x*.01)*4);
     ctx.fillStyle='rgba(79,195,255,.25)';ctx.beginPath();ctx.arc(0,0,i.r+4,0,7);ctx.fill();
     ctx.strokeStyle='#4fc3ff';ctx.lineWidth=3;ctx.lineCap='round';
@@ -1109,7 +1168,7 @@ function hud(){
   for(let i=0;i<5;i++){ctx.fillStyle=st.sinal>i*20?cor:'rgba(255,255,255,.15)';ctx.fillRect(72+i*16,sy+20-(i+1)*3.2,11,(i+1)*3.2+2)}
   ctx.fillStyle='rgba(0,0,0,.35)';rr(W-124,sy,110,28,10);ctx.fill();
   ctx.textAlign='right';ctx.font='16px serif';ctx.fillStyle='#fff';
-  const vv=Math.max(0,st.vidas);ctx.fillText('✉️'.repeat(vv)+'·'.repeat(3-vv),W-22,sy+20);
+  const vv=Math.max(0,st.vidas);ctx.fillText('✉️'.repeat(vv)+'·'.repeat(Math.max(0,3-vv)),W-22,sy+20);
   if(modo==='online'){ctx.font='800 12px "Baloo 2"';ctx.textAlign='left';ctx.fillStyle=net.souPiloto?'#5cf0a8':'#ffd24d';
     ctx.fillText(net.souPiloto?'🕹️ PILOTO':'📡 OPERADOR · toque pra marcar perigo',14,sy+46)}
   // texto da mensagem (só quem escreveu vê no online)
@@ -1136,6 +1195,8 @@ function draw(){
   fundo();desenhaAvisos();desenhaObs();desenhaChefe();desenhaTiros();desenhaParts();
   if(st.estado!=='fim'&&st.estado!=='parado')mensagem();
   if(modo==='online'&&st.estado!=='fim'){if(net.souPiloto)escuridao();else camadaOperador()}
+  if(modo==='chat'&&st.mimo==='neblina'&&st.estado!=='fim'&&st.estado!=='chegando'){const g=ctx.createRadialGradient(st.x,st.y,90,st.x,st.y,200);
+    g.addColorStop(0,'rgba(200,210,230,0)');g.addColorStop(1,'rgba(190,200,220,.93)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
   ctx.restore();
   if(st.estado!=='parado')hud();
   // aviso de celular em pé no online
