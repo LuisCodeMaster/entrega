@@ -43,6 +43,10 @@ const fb={pronto:false,uid:null,api:null,erro:null,
       souAdmin:async()=>(await D.get(r(`admins/${this.uid}`))).val()===true,
       rankApagar:uid=>D.remove(r(`ranking/${uid}`)),
       telEncerra:tid=>D.update(r(`telefones/${tid}/info`),{fim:true}),
+      lobbyPor:async(id,d,somePraSempre)=>{const ref=r(`lobby/${id}`);await D.set(ref,d);if(somePraSempre)await D.onDisconnect(ref).remove()},
+      lobbyTirar:id=>D.remove(r(`lobby/${id}`)),
+      lobbyFeito:(id,n)=>D.set(r(`lobby/${id}/feitos`),n),
+      lobbyOuvir:cb=>D.onValue(D.query(r('lobby'),D.orderByChild('t'),D.limitToLast(80)),s=>{const a=[];s.forEach(c=>{a.push({id:c.key,...c.val()})});cb(a)}),
       rankTop:async(campo,n)=>{const s=await D.get(D.query(r('ranking'),D.orderByChild(campo),D.limitToLast(n)));const a=[];s.forEach(c=>{a.push({uid:c.key,...c.val()})});return a.reverse()}
     };
     this.pronto=true;return true;

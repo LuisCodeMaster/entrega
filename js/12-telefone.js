@@ -19,6 +19,7 @@ function htmlTelefone(){
     <label>A frase que começa tudo</label>
     <div class="linha"><div style="flex:3"><input id="telFrase" maxlength="60" placeholder="${esc(temaDe(telTema).ex[0])}"></div><div><button class="sec" data-a="telSorteia" style="margin:0;height:100%">🎲</button></div></div>
     <div class="erro" id="erro"></div>
+    ${htmlPublico()}
     <button data-a="telCriar" ${hash?'class="sec"':''}>📞 CRIAR RODA E JOGAR</button>
     ${ls_.length?'<label>Suas rodas</label><div class="convs">'+ls_.map(t=>`<div class="convItem"><button data-a="telAbrir" data-n="${t.tid}"><span>📞 ${esc(t.titulo||'Roda')}<small>${t.criei?'você criou':'você participou'}</small></span></button><button class="lixo" data-a="telLixo" data-n="${t.tid}">🗑️</button></div>`).join('')+'</div>':''}`;
 }
@@ -34,7 +35,7 @@ async function telAcao(a,n){
     if(f.replace(/\s/g,'').length<4)return erro('Escreva uma frase um pouco maior.');
     erro('Criando…');
     try{await fb.iniciar();const tid=novoCid();
-      await fb.api.telCriar(tid,{criador:fb.uid,nome,max:telMax,tema:telTema,t:Date.now()});await fb.api.telEntrar(tid,nome);
+      await fb.api.telCriar(tid,{criador:fb.uid,nome,max:telMax,tema:telTema,t:Date.now()});await lobbyPublicaTel(tid,{nome,max:telMax,tema:telTema});await fb.api.telEntrar(tid,nome);
       salvaTel(tid,{titulo:'Roda de '+nome,criei:1});await telAbre(tid,true);
       if(await fb.api.telVez(tid,nome)){tel.prev='';escolheCanal(f,()=>telJoga(f),async()=>{await fb.api.telSoltaVez(tid).catch(()=>{});telLobby()})}
     }catch(e){erro('Não consegui criar a roda. Confira a internet.')}
@@ -48,7 +49,7 @@ async function telAcao(a,n){
   if(a==='telEntregar'){const t=limpaEntrada($('telTexto').value.trim());if(t.replace(/\s/g,'').length<2)return erro('Escreva o que você entendeu.');escolheCanal(t,()=>telJoga(t),()=>{telaReescrever();$('telTexto').value=t});return}
   if(a==='telDesiste'){await fb.api.telSoltaVez(tel.tid).catch(()=>{});telLobby();return}
   if(a==='telDeNovo'){telJoga(tel.meuTxt);return}
-  if(a==='telRevelarJa'){try{await fb.api.telEncerra(tel.tid)}catch(e){toast('⚠️ Não consegui encerrar')}return}
+  if(a==='telRevelarJa'){try{await fb.api.telEncerra(tel.tid);fb.api.lobbyTirar('t-'+tel.tid).catch(()=>{})}catch(e){toast('⚠️ Não consegui encerrar')}return}
   if(a==='telLobby'){parReveal();telLobby();return}
   if(a==='telReveal'){telaRevelacao();return}
   if(a==='telVideo'){gravaVideo();return}
@@ -62,6 +63,7 @@ async function telAbre(tid,nova){
   if(!nova){await fb.api.telEntrar(tid,ls.get('entrega_nome','Jogador'))}
   painel('<p>Carregando a roda…</p>');
   tel.desliga=fb.api.telOuvir(tid,d=>{tel.dados=d;
+    if(d&&d.info&&telFim(d)&&d.info.criador===fb.uid)fb.api.lobbyTirar('t-'+tid).catch(()=>{});
     if(d&&d.info)salvaTel(tid,{titulo:'Roda de '+d.info.nome,criei:d.info.criador===fb.uid?1:0});
     if(tel.tela==='lobby')telLobby()});
 }
@@ -120,6 +122,7 @@ async function telefoneConcluido(){
   const pts=Math.round((200+st.vidas*120+st.pegos*30+st.letrasPegas*15)*multCanal());
   try{await fb.api.telElo(tel.tid,chaveElo(i),elo);await fb.api.telSoltaVez(tel.tid).catch(()=>{});
     if(i+1>=tel.dados.info.max)await fb.api.telEncerra(tel.tid).catch(()=>{});
+    lobbyAtualizaTel(tel.tid,i+1,tel.dados.info.max,tel.dados.info.criador===fb.uid);
     ganhaPontos(pts,elo.pct);toast('✓✓ Passou adiante! '+elo.pct+'% inteira');telLobby()}
   catch(e){painel(`<div class="grande">⚠️</div><h2 class="ruim">Não consegui salvar sua vez</h2><p>Pode ser a internet, ou alguém jogou na mesma hora.</p><button data-a="telLobby">VOLTAR PRA RODA</button>`)}
 }

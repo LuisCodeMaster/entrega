@@ -3,7 +3,7 @@ const net={peer:null,conn:null,role:null,sala:null,ok:false,meuNome:'',outroNome
 const SALA_PREFIXO='entrega-msg-sala-';
 function novoCodigoSala(){const L='ABCDEFGHJKLMNPQRSTUVWXYZ';let s='';for(let i=0;i<4;i++)s+=L[Math.floor(R()*L.length)];return s}
 function redeDisponivel(){return typeof Peer!=='undefined'&&!NO_CLAUDE}
-function fechaRede(){try{net.conn&&net.conn.close()}catch(e){}try{net.peer&&net.peer.destroy()}catch(e){}Object.assign(net,{peer:null,conn:null,role:null,sala:null,ok:false})}
+function fechaRede(){lobbyTiraOnline();try{net.conn&&net.conn.close()}catch(e){}try{net.peer&&net.peer.destroy()}catch(e){}Object.assign(net,{peer:null,conn:null,role:null,sala:null,ok:false})}
 function criarSala(tent=0){
   fechaRede();net.role='host';net.sala=novoCodigoSala();
   const p=new Peer(SALA_PREFIXO+net.sala);net.peer=p;
@@ -33,7 +33,7 @@ function conexaoCaiu(){
   painel(`<div class="grande">📵</div><h2 class="ruim">Conexão perdida</h2><p>Perdemos a ligação com ${esc(net.outroNome||'seu amigo')}.</p><button data-a="menu">MENU</button>`);
 }
 function recebe(m){
-  if(m.t==='oi'){net.outroNome=m.nome||'Amigo';if(net.role==='host')telaLobbyHost();else telaLobbyGuest();return}
+  if(m.t==='oi'){net.outroNome=m.nome||'Amigo';if(net.role==='host')lobbyTiraOnline();if(net.role==='host')telaLobbyHost();else telaLobbyGuest();return}
   if(m.t==='lobby'){if(net.role==='guest')telaLobbyGuest(m);return}
   if(m.t==='start'){J=m.J;comecaOnline(m.piloto);return}
   if(m.t==='s'){if(!net.souPiloto&&modo==='online')aplicaSnap(m.d);return}

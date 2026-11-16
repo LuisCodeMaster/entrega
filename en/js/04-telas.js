@@ -10,6 +10,7 @@ function rotaHtml(online){
     return `<span class="${i<J.pos?'feita ':''}${minha?'minha':''}">${FASES[f].chefe.emoji}</span>`}).join('')+'</div>';
 }
 function telaInicio(){
+  if(typeof saiLobby==='function')saiLobby();
   if(typeof tel!=='undefined'){tel.tela=null;if(typeof parReveal==='function')parReveal()}
   let corpo='';
   if(aba==='conversas')corpo=htmlConversas();
@@ -21,6 +22,7 @@ function telaInicio(){
       const hash=(location.hash.match(/^#sala-([A-Z]{4})$/i)||[])[1]||'';
       corpo=`<p style="font-size:14px">Each on your own phone, at the same time. One is the <b>Pilot</b> (guides the message almost in the dark) and the other is the <b>Operator</b> (sees the radar and warns about dangers). Use the in-game signals or a call!</p>
       <label>Your name</label><input id="meuNome" maxlength="12" value="${esc(ls.get('entrega_nome','Luis'))}">
+      ${htmlPublico()}
       <button data-a="criarSala">🏠 CREATE ROOM</button>
       <label>…or join your friend's room</label>
       <div class="linha"><div style="flex:2"><input id="codSala" maxlength="4" placeholder="ABCD" value="${hash.toUpperCase()}" style="text-transform:uppercase;letter-spacing:4px;font-weight:800"></div>
@@ -48,6 +50,7 @@ function telaInicio(){
   painel(`<h1>✉️ ENTREGA!</h1>
     <p>You are a <b>message</b> traveling from one phone to another.</p>
     <div class="perfil"><a class="lang" href="${LANG_LINK}">${LANG_TXT}</a><span>⭐ ${perfil.pts}</span><button data-a="visual">🎽 Visual</button><button data-a="ranking">🏆 Ranking</button><button data-a="mural">📊 Wall</button><button data-a="som">${AU.mudo?'🔇':'🔊'}</button></div>
+    <button class="lobbyBtn" data-a="lobby">🌍 LOBBY · open rooms to join</button>
     <div class="abas" style="grid-template-columns:repeat(3,1fr)">
       <button class="${aba==='conversas'?'on':''}" data-a="aba" data-n="conversas">💬<br>Chat</button>
       <button class="${aba==='telefone'?'on':''}" data-a="aba" data-n="telefone">📞<br>Telephone</button>
@@ -60,6 +63,7 @@ function telaInicio(){
 }
 // ---- online: salas ----
 function telaSalaCriada(){
+  if(!net.lobbyId)lobbyPublicaOnline();
   const link=SITE+'#sala-'+net.sala;
   const share=`🎧 Let's play ENTREGA together! Open this link and join room ${net.sala}:\n${link}`;
   painel(`<div class="grande">🏠</div><h2>Room created!</h2><p>Give this code to your friend:</p>
@@ -67,7 +71,7 @@ function telaSalaCriada(){
     <textarea id="share" rows="3" readonly>${esc(share)}</textarea>
     <button class="sec" data-a="copiar">📋 COPY INVITE</button>
     <div class="erro" id="erro"></div>
-    <p style="font-size:14px;margin-top:10px">⏳ Waiting for your friend…</p>
+    <p style="font-size:14px;margin-top:10px">⏳ Waiting for your friend…${lobbyPublico?'<br>🌍 Your room is showing in the Lobby.':''}</p>
     <button class="sec" data-a="sairOnline">CANCEL</button>`);
 }
 let pilotoEscolha='host';
@@ -244,6 +248,7 @@ $('card').addEventListener('click',e=>{
   if(a==='mural'){muralAba='top';telaMural()}
   if(a==='som'){alternaSom();telaInicio()}
   if(['muralAba','curtir','muralEsconde','muralApaga'].includes(a)){muralAcao(a,n);return}
+  if(a.startsWith('lobby')||a==='publico'){lobbyAcao(a,n);return}
   if(a==='rankAba'){rankAba=n;telaRanking()}
   if(a==='rankApaga'){fb.api.rankApagar(n).then(()=>{toast('🗑️ Removed from ranking');telaRanking()}).catch(()=>toast('⚠️ No admin permission'));return}
   if(a==='copiarId'){const t=fb.uid||'';navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>toast('📋 ID copied'),()=>toast(t));return}
