@@ -1,0 +1,45 @@
+ENTREGA! — A Jornada da Mensagem
+Copyright (c) 2026 LuisCodeMaster. Todos os direitos reservados.
+
+PORTUGUÊS
+
+Este jogo, incluindo o código, o visual, os textos, os personagens, as fases,
+as músicas geradas e o nome "ENTREGA!", pertence a LuisCodeMaster.
+
+Você PODE:
+  - jogar o jogo no site oficial (https://luiscodemaster.github.io/entrega/);
+  - gravar e publicar vídeos, transmissões e capturas de tela jogando,
+    inclusive com monetização, desde que cite o jogo e o link oficial;
+  - ler o código neste repositório para aprender.
+
+Você NÃO PODE, sem autorização por escrito do autor:
+  - copiar, republicar ou hospedar o jogo (ou partes dele) em outro site,
+    loja de aplicativos ou plataforma;
+  - vender, distribuir ou apresentar o jogo, ou uma versão modificada dele,
+    como se fosse seu;
+  - usar o código, o visual ou o nome em outro projeto.
+
+Pedidos de autorização: abra uma issue em
+https://github.com/LuisCodeMaster/entrega/issues
+
+ENGLISH
+
+This game, including its code, art, text, characters, stages, generated music
+and the name "ENTREGA!", belongs to LuisCodeMaster. All rights reserved.
+
+You MAY play the game on the official website, record and publish videos,
+streams and screenshots of it (monetized or not) as long as you credit the
+game and link to the official website, and read this source code to learn.
+
+You MAY NOT, without the author's written permission, copy, republish or host
+the game (or parts of it) elsewhere, sell or distribute it or a modified
+version of it, present it as your own, or reuse its code, art or name in
+another project.
+
+THIRD-PARTY SOFTWARE
+
+The game loads the following libraries from their official sources. They are
+not covered by this license and remain under their own licenses:
+  - PeerJS (MIT License) — https://peerjs.com
+  - Firebase JavaScript SDK (Apache License 2.0) — https://firebase.google.com
+  - Baloo 2 font (SIL Open Font License 1.1) — via Google Fonts

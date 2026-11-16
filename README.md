@@ -39,3 +39,6 @@ Os scripts são carregados em ordem e compartilham as mesmas variáveis. Ao muda
 
 ## Admin
 Pra virar admin (apagar qualquer item do mural e tirar trapaceiros do ranking), copie seu ID de jogador na tela 🎽 Visual e crie no Firebase, em Realtime Database, o caminho `admins/SEU_ID` com o valor `true`.
+
+## Licença
+Todos os direitos reservados. Pode jogar e fazer vídeos citando o jogo; não pode copiar nem republicar. Veja o arquivo [LICENSE](LICENSE).
