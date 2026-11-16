@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Gera en/index.html a partir de index.html (português) trocando os textos da interface.
+"""Gera a pasta en/ (index.html, css/ e js/) a partir dos arquivos em português, trocando os textos da interface.
 Uso: python3 tools/traduz.py   (rode na raiz do repositório depois de mexer no index.html)
-Cada chave precisa existir no index.html; se alguma sumir, o script avisa."""
+Cada chave precisa existir em algum dos arquivos; se alguma sumir, o script avisa."""
 import os, re, sys
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-src = open(os.path.join(RAIZ, 'index.html'), encoding='utf-8').read()
+ARQS = ['index.html', 'css/estilo.css'] + sorted('js/' + f for f in os.listdir(os.path.join(RAIZ, 'js')) if f.endswith('.js'))
+fontes = {a: open(os.path.join(RAIZ, a), encoding='utf-8').read() for a in ARQS}
 
 # (português, inglês) — as mais longas são aplicadas primeiro
 T = [
@@ -78,7 +79,7 @@ T = [
  ('Celular: arraste o dedo (melhor deitado). PC: setas / WASD.<br>Pegue 📶, desvie de 🦠 🔥 📧. No chefe, você atira ✓ sozinho.',
   'Phone: drag your finger (best in landscape). PC: arrows / WASD.<br>Grab 📶, dodge 🦠 🔥 📧. Against bosses you shoot ✓ automatically.'),
  ('<label>Seu nome</label>', '<label>Your name</label>'),
- ("pegaNome(){const i=$('meuNome');const n=((i&&i.value.trim())||ls.get('entrega_nome','')||'Jogador')", "pegaNome(){const i=$('meuNome');const n=((i&&i.value.trim())||ls.get('entrega_nome','')||'Player')"),
+ ("ls.get('entrega_nome','')||'Jogador').slice(0,12));", "ls.get('entrega_nome','')||'Player').slice(0,12));"),
 
  # ---------- conversa ----------
  ('<p style="font-size:14px">💬 <b>Conversas</b>: escreva uma mensagem, entregue jogando, e ela fica guardada até seu amigo abrir.</p><p class="ruim" style="font-size:14px">Ainda falta ligar o servidor das conversas. Enquanto isso, use as outras abas.</p>',
@@ -248,7 +249,8 @@ T = [
  ('painel(`<h2>🎽 Visual da mensagem</h2>', 'painel(`<h2>🎽 Message style</h2>'),
  ("<b>${perfil.pts}</b> pontos${prox?` · próximo: ${prox.n} com ${prox.p}`:' · tudo desbloqueado!'}", "<b>${perfil.pts}</b> points${prox?` · next: ${prox.n} at ${prox.p}`:' · everything unlocked!'}"),
  ("${sec('Cor do envelope',CORES_ENV,perfil.cor,'cor')}${sec('Rastro',RASTROS,perfil.rastro,'rastro')}${sec('Carinha',CARAS,perfil.cara,'cara')}", "${sec('Envelope color',CORES_ENV,perfil.cor,'cor')}${sec('Trail',RASTROS,perfil.rastro,'rastro')}${sec('Face',CARAS,perfil.cara,'cara')}"),
- ('<p class="dica">Você ganha pontos entregando mensagens nas Conversas e vencendo fases nos outros modos.</p>\n    <button class="sec" data-a="menu">VOLTAR</button>', '<p class="dica">You earn points delivering messages in Chat and Broken Telephone, and beating stages in the other modes.</p>\n    <button class="sec" data-a="menu">BACK</button>'),
+ ('<p class="dica">Você ganha pontos entregando mensagens nas Conversas e vencendo fases nos outros modos.</p>', '<p class="dica">You earn points delivering messages in Chat and Broken Telephone, and beating stages in the other modes.</p>'),
+ ('<p class="dica" id="meuId"></p>\n    <button class="sec" data-a="menu">VOLTAR</button>', '<p class="dica" id="meuId"></p>\n    <button class="sec" data-a="menu">BACK</button>'),
  ("toast('🔒 Precisa de '+it.p+' pontos')", "toast('🔒 Needs '+it.p+' points')"),
  ("const abas=[['pts','⭐ Pontos'],['media','🎯 Mais inteiras'],['perfeitas','💯 Perfeitas']];", "const abas=[['pts','⭐ Points'],['media','🎯 Most intact'],['perfeitas','💯 Perfect']];"),
  ("<p class=\"dica\">Você: ⭐ ${perfil.pts} pts · ${perfil.entregas} entregas · ${mediaPct()}% de média · 💯 ${perfil.perfeitas}<br>\"Mais inteiras\" conta só quem tem 5 entregas ou mais.</p><button class=\"sec\" data-a=\"menu\">VOLTAR</button>",
@@ -300,7 +302,7 @@ T = [
   "network:'No internet or the room server is down.','browser-incompatible':'This browser does not support online mode.','server-error':'Room server is down, try again.'}[e.type]||('Connection error ('+e.type+').')"),
  ('<h2 class="ruim">Conexão perdida</h2><p>Perdemos a ligação com ${esc(net.outroNome||\'seu amigo\')}.</p>', '<h2 class="ruim">Connection lost</h2><p>We lost the connection with ${esc(net.outroNome||\'your friend\')}.</p>'),
  ("net.outroNome=m.nome||'Amigo';", "net.outroNome=m.nome||'Friend';"),
- ("net.meuNome=($('meuNome').value.trim()||'Jogador').slice(0,12);", "net.meuNome=($('meuNome').value.trim()||'Player').slice(0,12);"),
+ ("net.meuNome=limpaTexto(($('meuNome').value.trim()||'Jogador').slice(0,12));", "net.meuNome=limpaTexto(($('meuNome').value.trim()||'Player').slice(0,12));"),
  ("erro('Criando sala…');", "erro('Creating room…');"),
  ("return erro('O código tem 4 letras.');erro('Entrando…');", "return erro('The code has 4 letters.');erro('Joining…');"),
  ("return erro('Escreva uma mensagem um pouco maior.');\n    ls.set('entrega_ultimo',t);", "return erro('Write a slightly longer message.');\n    ls.set('entrega_ultimo',t);"),
@@ -384,6 +386,13 @@ T = [
  ("celular(sx,H/2,dados.de||'Você','#5cf0a8')", "celular(sx,H/2,dados.de||'You','#5cf0a8')"),
  ("celular(W+80-(W*0.2+80)*k,H/2,dados.para||'Destino','#ff9ad5')", "celular(W+80-(W*0.2+80)*k,H/2,dados.para||'Destination','#ff9ad5')"),
  ("J=novaJornada(ls.get('entrega_nome','Eu'),ch.outro||'Amigo',txt,'ida');", "J=novaJornada(ls.get('entrega_nome','Me'),ch.outro||'Friend',txt,'ida');"),
+ # ---------- filtro e admin ----------
+ ("toast('✱ Palavrão censurado')", "toast('✱ Swear word censored')"),
+ ("toast('🗑️ Removido do ranking')", "toast('🗑️ Removed from ranking')"),
+ ("toast('⚠️ Sem permissão de admin')", "toast('⚠️ No admin permission')"),
+ ("toast('📋 ID copiado')", "toast('📋 ID copied')"),
+ ("e().innerHTML=`🆔 Seu ID de jogador: <code", "e().innerHTML=`🆔 Your player ID: <code"),
+ ("${adm?'<br>👑 Você é admin':''}", "${adm?'<br>👑 You are an admin':''}"),
  # ---------- caminhos de conexão ----------
  ("{id:'g4',e:'📶',n:'4G / 5G',v:'Rápido',p:'Zonas mortas: o sinal despenca'", "{id:'g4',e:'📶',n:'4G / 5G',v:'Fast',p:'Dead zones: signal drops hard'"),
  ("{id:'cabo',e:'🔌',n:'Cabo / fibra',v:'Quase não perde sinal',p:'Caminho estreito, ratos e obras'", "{id:'cabo',e:'🔌',n:'Cable / fiber',v:'Barely loses signal',p:'Narrow path, rats and roadworks'"),
@@ -403,19 +412,24 @@ T = [
 ]
 
 T.sort(key=lambda p: -len(p[0]))
-out = src
+saida = dict(fontes)
 faltando = []
 for pt, en in T:
-    if pt not in out:
+    achou = False
+    for a in ARQS:
+        if pt in saida[a]:
+            saida[a] = saida[a].replace(pt, en)
+            achou = True
+    if not achou:
         faltando.append(pt)
-        continue
-    out = out.replace(pt, en)
 
 if faltando:
-    print('⚠️  Textos que não achei no index.html (traduza à mão ou atualize o dicionário):')
+    print('⚠️  Textos que não achei (traduza à mão ou atualize o dicionário):')
     for f in faltando: print('   -', f[:110])
 
-os.makedirs(os.path.join(RAIZ, 'en'), exist_ok=True)
-open(os.path.join(RAIZ, 'en', 'index.html'), 'w', encoding='utf-8').write(out)
-print('en/index.html gerado,', len(T) - len(faltando), 'de', len(T), 'textos traduzidos')
+for a, conteudo in saida.items():
+    destino = os.path.join(RAIZ, 'en', a)
+    os.makedirs(os.path.dirname(destino), exist_ok=True)
+    open(destino, 'w', encoding='utf-8').write(conteudo)
+print('en/ gerado:', len(ARQS), 'arquivos,', len(T) - len(faltando), 'de', len(T), 'textos traduzidos')
 sys.exit(1 if faltando else 0)

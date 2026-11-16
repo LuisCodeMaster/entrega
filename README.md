@@ -14,4 +14,28 @@ Você é uma **mensagem** viajando de um celular pro outro: Wi-Fi de casa, torre
 Feito em HTML5 Canvas, num arquivo só. As conversas ficam no Firebase Realtime Database. O online usa [PeerJS](https://peerjs.com/) (WebRTC, conexão direta entre os aparelhos).
 
 ## Versão em inglês
-A página `en/index.html` é gerada a partir do `index.html` pelo script `tools/traduz.py`. Depois de mexer no jogo, rode `python3 tools/traduz.py` pra atualizar o inglês.
+A pasta `en/` é gerada a partir dos arquivos em português pelo script `tools/traduz.py`. Depois de mexer no jogo, rode `python3 tools/traduz.py` pra atualizar o inglês.
+
+## Como o código está organizado
+| Arquivo | O que tem |
+|---|---|
+| `index.html` | Estrutura da página e ordem dos scripts |
+| `css/estilo.css` | Visual dos menus, chat, botões |
+| `js/01-base.js` | Configuração, canvas, utilitários |
+| `js/02-fases.js` | As 5 fases, chefes e letras da mensagem |
+| `js/03-rede.js` | Modo Online (Piloto + Operador, PeerJS) |
+| `js/04-telas.js` | Menus e telas, cliques dos botões |
+| `js/05-conversas.js` | Modo Conversa e conexão com o Firebase |
+| `js/06-perfil.js` | Pontos, personalização e ranking |
+| `js/07-som.js` | Música gerada e efeitos sonoros |
+| `js/08-filtro.js` | Filtro de palavrões |
+| `js/09-canais.js` | Caminhos de conexão (4G, cabo, Wi-Fi…) |
+| `js/10-temas.js` | Temas do Telefone Sem Fio |
+| `js/11-mural.js` | Mural público e curtidas |
+| `js/12-telefone.js` | Telefone Sem Fio, revelação e vídeo |
+| `js/13-estado.js` … `js/17-loop.js` | Motor do jogo: estado, inimigos, física, desenho e laço principal |
+
+Os scripts são carregados em ordem e compartilham as mesmas variáveis. Ao mudar algo, aumente o `?v=` das tags no `index.html` pra forçar o navegador a baixar a versão nova, e rode `python3 tools/traduz.py` pra atualizar a pasta `en/`.
+
+## Admin
+Pra virar admin (apagar qualquer item do mural e tirar trapaceiros do ranking), copie seu ID de jogador na tela 🎽 Visual e crie no Firebase, em Realtime Database, o caminho `admins/SEU_ID` com o valor `true`.
