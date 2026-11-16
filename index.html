@@ -898,6 +898,7 @@ async function telAcao(a,n){
     return}
   if(a==='telAbrir'){pegaNome();erro('Conectando…');try{await fb.iniciar();await telAbre(n)}catch(e){erro('Não consegui abrir essa roda.')}return}
   if(a==='telVez'){
+    if(telFim(tel.dados)||elosDe(tel.dados).some(e=>e.de===fb.uid))return telLobby();
     const ok=await fb.api.telVez(tel.tid,ls.get('entrega_nome','Jogador')).catch(()=>false);
     if(!ok){toast('Alguém pegou a vez antes de você!');return telLobby()}
     const el=elosDe(tel.dados);tel.prev=el.length?el[el.length-1].vis:'';telaReescrever();return}
@@ -968,6 +969,7 @@ function telJoga(txt){
 }
 async function telefoneConcluido(){
   const el=elosDe(tel.dados),i=el.length;
+  if(telFim(tel.dados)||el.some(e=>e.de===fb.uid)){await fb.api.telSoltaVez(tel.tid).catch(()=>{});toast('Essa roda já recebeu sua vez (ou acabou).');return telLobby()}
   const elo={de:fb.uid,nome:ls.get('entrega_nome','Jogador').slice(0,12),recebeu:(tel.prev||'').slice(0,80),txt:J.txt.slice(0,80),vis:textoEstragado().slice(0,80),pct:pctInteiro(),t:Date.now()};
   const pts=Math.round(200+st.vidas*120+st.pegos*30+st.letrasPegas*15);
   try{await fb.api.telElo(tel.tid,chaveElo(i),elo);await fb.api.telSoltaVez(tel.tid).catch(()=>{});
