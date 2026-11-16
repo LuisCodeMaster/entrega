@@ -100,7 +100,19 @@
   .convs button{margin:0;display:flex;justify-content:space-between;align-items:center;gap:8px;background:#232b52;color:#fff;box-shadow:0 4px 0 #161c3a;font-size:16px;text-align:left;padding:10px 12px}
   .convs button small{display:block;font-weight:500;font-size:13px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px}
   .badge{background:#ff4d6d;color:#fff;border-radius:10px;padding:0 8px;font-size:13px}
-  .perfil{display:flex;gap:6px;align-items:center;justify-content:center;margin:2px 0 4px}
+  #btnSom{position:fixed;left:12px;top:98px;z-index:4;width:38px;height:38px;margin:0;padding:0;font-size:18px;border-radius:50%;background:rgba(0,0,0,.4);box-shadow:none;color:#fff}
+  .murais{display:flex;flex-direction:column;gap:10px;margin:10px 0;max-height:52vh;overflow-y:auto}
+  .mural{background:#232b52;border-radius:14px;padding:10px 12px;text-align:center}
+  .mTema{font-size:12px;opacity:.75}.mIni{color:#5cf0a8;font-weight:700;font-size:16px}.mSeta{font-size:12px;opacity:.6}
+  .mFim{color:#ff9ad5;font-weight:800;font-size:19px;line-height:1.2}
+  .mPe{display:flex;align-items:center;gap:6px;margin-top:8px}.mPe small{flex:1;text-align:left;opacity:.7;font-size:12px}
+  .mPe button{margin:0;width:auto;padding:5px 10px;font-size:14px;border-radius:10px;background:#2f3d7a;color:#fff;box-shadow:none}
+  .mPe button.on{background:#ff4d6d}
+  .temas{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+  .temas button{margin:0;padding:6px 2px;font-size:11px;line-height:1.1;border-radius:10px;background:#2f3d7a;color:#fff;box-shadow:none}
+  .temas button b{display:block;font-size:20px}.temas button.on{background:#5cf0a8;color:#08321d}
+  .perfil{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;margin:2px 0 4px}
+  .perfil .lang{color:#bfc8ee;font-size:13px;font-weight:700;text-decoration:none;border:1px solid #2f3d7a;border-radius:10px;padding:5px 8px}
   .perfil span{font-weight:800;color:#ffd24d;padding:0 6px}
   .perfil button{margin:0;width:auto;padding:6px 12px;font-size:14px;border-radius:10px;background:#2f3d7a;color:#fff;box-shadow:0 3px 0 #1b2550}
   .vis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
@@ -134,10 +146,11 @@
   <div class="chDica">Cada mensagem é entregue jogando. Dano estraga letras! 🎮</div>
 </div>
 <div id="toast" class="oculta"></div>
+<button id="btnSom">🔊</button>
 
 <script>
 (()=>{
-const SITE='https://luiscodemaster.github.io/entrega/';
+const SITE_RAIZ='https://luiscodemaster.github.io/entrega/';const SITE=SITE_RAIZ;const LANG_LINK='en/';const LANG_TXT='🇺🇸 EN';const LOCALE='pt-BR';
 const NO_CLAUDE=/claude\.ai|claudeusercontent|anthropic/.test(location.hostname);
 const LINK=NO_CLAUDE?'https://claude.ai/artifact/YNVSU23sJdKwRsfFKtAP6f':SITE;
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
@@ -306,7 +319,7 @@ function telaInicio(){
     `</div><button data-a="treinar">JOGAR FASE ${nivelSel+1}</button>`}
   painel(`<h1>✉️ ENTREGA!</h1>
     <p>Você é uma <b>mensagem</b> viajando de um celular para o outro.</p>
-    <div class="perfil"><span>⭐ ${perfil.pts}</span><button data-a="visual">🎽 Visual</button><button data-a="ranking">🏆 Ranking</button></div>
+    <div class="perfil"><a class="lang" href="${LANG_LINK}">${LANG_TXT}</a><span>⭐ ${perfil.pts}</span><button data-a="visual">🎽 Visual</button><button data-a="ranking">🏆 Ranking</button><button data-a="mural">📊 Mural</button><button data-a="som">${AU.mudo?'🔇':'🔊'}</button></div>
     <div class="abas" style="grid-template-columns:repeat(3,1fr)">
       <button class="${aba==='conversas'?'on':''}" data-a="aba" data-n="conversas">💬<br>Conversa</button>
       <button class="${aba==='telefone'?'on':''}" data-a="aba" data-n="telefone">📞<br>Telefone</button>
@@ -466,7 +479,7 @@ async function copiar(){
 }
 
 $('card').addEventListener('click',e=>{
-  const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,n=b.dataset.n;
+  const b=e.target.closest('[data-a]');if(!b)return;sfx('clique');const a=b.dataset.a,n=b.dataset.n;
   if(a==='aba'){aba=n;telaInicio()}
   if(a==='fase'){if(+n<=liberado){nivelSel=+n;telaInicio()}}
   if(a==='treinar'||a==='treinoDeNovo'){modo='treino';J=null;jogar(a==='treinar'?nivelSel:st.n)}
@@ -491,12 +504,15 @@ $('card').addEventListener('click',e=>{
     const rota=J.rota==='ida'?'volta':'ida';J=novaJornada(J.para,J.de,t,rota,J.rodada+1);modo='jornada';jogarJ();
   }
   if(a==='menu')menu();
-  if(a.startsWith('tel')&&a!=='treinar'){telAcao(a,n);return}
+  if(a.startsWith('tel')){telAcao(a,n);return}
   if(['novaConv','entrarConv','abrirConv','entrarConvLink','tentarChat','cancelarChat','lixoConv','remConv','remConvTudo'].includes(a)){acaoConversa(a,n);return}
   if(a==='visual')telaVisual();
   if(a==='skin'){const [k,v]=n.split(':');perfil[k]=v;salvaPerfil();telaVisual()}
   if(a==='nada'){const it=[...CORES_ENV,...RASTROS,...CARAS].find(x=>n.endsWith(':'+x.id));if(it)toast('🔒 Precisa de '+it.p+' pontos')}
   if(a==='ranking')telaRanking();
+  if(a==='mural'){muralAba='top';telaMural()}
+  if(a==='som'){alternaSom();telaInicio()}
+  if(['muralAba','curtir','muralEsconde','muralApaga'].includes(a)){muralAcao(a,n);return}
   if(a==='rankAba'){rankAba=n;telaRanking()}
   // online
   if(a==='criarSala'||a==='entrarSala'){
@@ -556,6 +572,10 @@ const fb={pronto:false,uid:null,api:null,erro:null,
       telVez:async(tid,nome)=>{const res=await D.runTransaction(r(`telefones/${tid}/vez`),cur=>{const ag=Date.now();if(!cur||!cur.ate||cur.ate<ag||cur.uid===this.uid)return {uid:this.uid,nome,ate:ag+240000};return});return res.committed&&res.snapshot.val()&&res.snapshot.val().uid===this.uid},
       telSoltaVez:tid=>D.remove(r(`telefones/${tid}/vez`)),
       telElo:(tid,k,elo)=>D.set(r(`telefones/${tid}/elos/${k}`),elo),
+      muralPublicar:(id,d)=>D.set(r(`galeria/${id}`),d),
+      muralLista:async n=>{const s=await D.get(D.query(r('galeria'),D.orderByChild('t'),D.limitToLast(n)));const a=[];s.forEach(c=>{a.push({id:c.key,...c.val()})});return a},
+      muralCurtir:(id,sim)=>sim?D.set(r(`galeria/${id}/curtidas/${this.uid}`),true):D.remove(r(`galeria/${id}/curtidas/${this.uid}`)),
+      muralApagar:id=>D.remove(r(`galeria/${id}`)),
       telEncerra:tid=>D.update(r(`telefones/${tid}/info`),{fim:true}),
       rankTop:async(campo,n)=>{const s=await D.get(D.query(r('ranking'),D.orderByChild(campo),D.limitToLast(n)));const a=[];s.forEach(c=>{a.push({uid:c.key,...c.val()})});return a.reverse()}
     };
@@ -645,7 +665,7 @@ function mostraConvite(forca){
   box.innerHTML=`Mande esse convite pro seu amigo (só precisa uma vez):<textarea id="share" rows="3" readonly>${esc(share)}</textarea><button class="sec" data-c="copiar">📋 COPIAR CONVITE</button><div class="erro" id="erro"></div>`;
   box.classList.remove('oculta');
 }
-function fmtHora(t){if(!t)return'';const d=new Date(t);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+function fmtHora(t){if(!t)return'';const d=new Date(t);return d.toLocaleDateString(LOCALE,{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString(LOCALE,{hour:'2-digit',minute:'2-digit'})}
 function ocultas(){try{return JSON.parse(ls.get('entrega_ocultas','{}'))}catch(e){return{}}}
 function oculta(mid){const o=ocultas();o[mid]=1;ls.set('entrega_ocultas',JSON.stringify(o))}
 function menuMsgHtml(m){
@@ -662,8 +682,8 @@ function renderMsgs(){
   const vis=ch.msgs.filter(m=>!oc[m.id]);
   if(!vis.length){box.innerHTML=`<div class="chVazio">Nenhuma mensagem pra mostrar.<br>Escreva algo aí embaixo e entregue jogando! ✉️</div>`;return}
   for(const m of vis){
-    const d=m.t?new Date(m.t).toLocaleDateString('pt-BR'):'';if(d&&d!==dia){dia=d;html+=`<div class="chData">${d}</div>`}
-    const hora=m.t?new Date(m.t).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+    const d=m.t?new Date(m.t).toLocaleDateString(LOCALE):'';if(d&&d!==dia){dia=d;html+=`<div class="chData">${d}</div>`}
+    const hora=m.t?new Date(m.t).toLocaleTimeString(LOCALE,{hour:'2-digit',minute:'2-digit'}):'';
     const selo=(m.chefe?'👑 ':'')+`✓✓ ${m.pct}%`;
     const mim=m.mimo&&MIMOS[m.mimo]?`<div class="mimo">🎁 ${m.de===fb.uid?'você mandou':'mandou junto'}: ${MIMOS[m.mimo].e} ${MIMOS[m.mimo].n}</div>`:'';
     if(m.de===fb.uid){
@@ -713,7 +733,7 @@ function efeitosDoTexto(t){const l=t.toLowerCase(),e=[];
   if(/❤|♥|💖|💕|💗|😍|🥰/.test(t))e.push('coracao');
   if(/🔥/.test(t))e.push('fogo');
   if(/😂|🤣/.test(t))e.push('risada');
-  if(/k{3,}|(ha){2,}|(rs){2,}/.test(l))e.push('kkk');
+  if(/k{3,}|(ha){2,}|(rs){2,}|lol|lmao/.test(l))e.push('kkk');
   if(/socorro|help/.test(l))e.push('socorro');
   if(/\?/.test(t))e.push('pergunta');
   return e}
@@ -862,6 +882,136 @@ async function telaRanking(){
   }catch(e){painel(topo+'<p class="ruim">Não consegui carregar o ranking. Confira a internet.</p>'+rodape)}
 }
 
+// ================= SOM (tudo sintetizado na hora, música original gerada) =================
+const AU={ctx:null,master:null,mus:null,sfxG:null,mudo:ls.get('entrega_mudo','0')==='1',faixa:null,timer:null,passo:0,prox:0,cfg:null,musG:null};
+function auInit(){
+  if(AU.ctx||!(window.AudioContext||window.webkitAudioContext))return;
+  try{AU.ctx=new (window.AudioContext||window.webkitAudioContext)();
+    AU.master=AU.ctx.createGain();AU.master.gain.value=AU.mudo?0:.7;AU.master.connect(AU.ctx.destination);
+    AU.sfxG=AU.ctx.createGain();AU.sfxG.gain.value=.55;AU.sfxG.connect(AU.master);
+    AU.ruido=AU.ctx.createBuffer(1,AU.ctx.sampleRate,AU.ctx.sampleRate);const d=AU.ruido.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  }catch(e){AU.ctx=null}
+}
+['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,()=>{auInit();if(AU.ctx&&AU.ctx.state==='suspended')AU.ctx.resume()},{capture:true,passive:true}));
+function alternaSom(){AU.mudo=!AU.mudo;ls.set('entrega_mudo',AU.mudo?'1':'0');if(AU.master)AU.master.gain.setTargetAtTime(AU.mudo?0:.7,AU.ctx.currentTime,.05);
+  if(window.speechSynthesis&&AU.mudo)speechSynthesis.cancel();const b=$('btnSom');if(b)b.textContent=AU.mudo?'🔇':'🔊';return AU.mudo}
+const mf=m=>440*Math.pow(2,(m-69)/12);
+function tom(dest,t,f,dur,tipo='square',vol=.2,f2=null,ataque=.005){
+  const c=AU.ctx,o=c.createOscillator(),g=c.createGain();o.type=tipo;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+ataque);g.gain.exponentialRampToValueAtTime(.0005,t+dur);o.connect(g);g.connect(dest);o.start(t);o.stop(t+dur+.02)}
+function ruido(dest,t,dur,vol=.2,freq=4000,tipo='highpass',freq2=null){
+  const c=AU.ctx,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=AU.ruido;f.type=tipo;f.frequency.setValueAtTime(freq,t);if(freq2)f.frequency.exponentialRampToValueAtTime(freq2,t+dur);
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0005,t+dur);s.connect(f);f.connect(g);g.connect(dest);s.start(t,Math.random()*.5);s.stop(t+dur+.02)}
+function bumbo(dest,t,vol=.6){tom(dest,t,150,.28,'sine',vol,40,.002)}
+function sfx(nome,arg){
+  if(!AU.ctx||AU.mudo)return;const t=AU.ctx.currentTime+.01,d=AU.sfxG;
+  switch(nome){
+    case 'letra':{const k=[0,2,4,7,9,12][(arg||0)%6];tom(d,t,mf(76+k),.09,'square',.12);tom(d,t+.05,mf(83+k),.08,'square',.08);break}
+    case 'sinal':tom(d,t,mf(84),.12,'triangle',.25);tom(d,t+.07,mf(91),.18,'triangle',.22);break;
+    case 'dano':ruido(d,t,.25,.35,1800,'lowpass',300);tom(d,t,220,.3,'sawtooth',.18,70);break;
+    case 'escudo':tom(d,t,mf(88),.25,'triangle',.2,mf(76));ruido(d,t,.15,.15,6000);break;
+    case 'alarme':for(let i=0;i<3;i++){tom(d,t+i*.28,mf(81),.12,'square',.14);tom(d,t+i*.28+.14,mf(76),.12,'square',.14)}break;
+    case 'explosao':ruido(d,t,.9,.5,2500,'lowpass',120);bumbo(d,t,.7);break;
+    case 'vitoria':[72,76,79,84,88].forEach((m,i)=>tom(d,t+i*.08,mf(m),.25,'square',.12));tom(d,t+.42,mf(91),.5,'triangle',.2);break;
+    case 'perdeu':[67,63,60,55].forEach((m,i)=>tom(d,t+i*.16,mf(m),.22,'triangle',.22));break;
+    case 'clique':tom(d,t,mf(90),.04,'square',.05);break;
+  }
+}
+// ---- música gerada: progressões e melodia procedural ----
+const MUSICAS={
+  menu:{bpm:92,raiz:57,acordes:[[0,'m'],[-4,'M'],[3,'M'],[-2,'M']],bat:'leve',sem:7},
+  fase:{bpm:128,raiz:60,acordes:[[0,'M'],[7,'M'],[9,'m'],[5,'M']],bat:'cheio',sem:3},
+  chefe:{bpm:148,raiz:52,acordes:[[0,'m'],[-4,'M'],[-2,'M'],[-5,'M']],bat:'pesado',sem:11},
+  reveal:{bpm:104,raiz:62,acordes:[[0,'M'],[-3,'m'],[5,'M'],[7,'M']],bat:'leve',sem:5}};
+function rngSem(s){return()=>{s=(s*9301+49297)%233280;return s/233280}}
+function preparaMelodia(cfg){if(cfg.mel)return;const r=rngSem(cfg.sem);cfg.mel=[];
+  for(let b=0;b<4;b++)for(let p=0;p<16;p+=2)cfg.mel.push(r()<.55?Math.floor(r()*4):-1)}
+function triade(q){return q==='m'?[0,3,7]:[0,4,7]}
+function tocaPasso(cfg,passo,t,dest,vol=1){
+  preparaMelodia(cfg);const sp=60/cfg.bpm/4,bar=Math.floor(passo/16)%4,s=passo%16,[off,q]=cfg.acordes[bar],raiz=cfg.raiz+off,tri=triade(q);
+  if(s%8===0||(cfg.bat!=='leve'&&s%8===6))tom(dest,t,mf(raiz-12),sp*3,'triangle',.22*vol);
+  if(s%2===0)tom(dest,t,mf(raiz+12+tri[(s/2)%3]),sp*1.6,'square',.035*vol);
+  if(s%2===0){const n=cfg.mel[bar*8+s/2];if(n>=0)tom(dest,t,mf(raiz+24+[0,tri[1],tri[2],12][n]),sp*1.8,cfg.bat==='pesado'?'sawtooth':'square',.05*vol)}
+  if(cfg.bat!=='leve'&&s%4===0)bumbo(dest,t,.35*vol);else if(cfg.bat==='leve'&&s%8===0)bumbo(dest,t,.2*vol);
+  if(cfg.bat!=='leve'&&(s===4||s===12))ruido(dest,t,.12,.12*vol,1500,'bandpass');
+  if(s%2===0)ruido(dest,t,.03,(cfg.bat==='leve'?.025:.05)*vol,8000);
+}
+function musica(nome){
+  if(!AU.ctx||AU.faixa===nome)return;AU.faixa=nome;
+  if(AU.musG){const g=AU.musG;g.gain.setTargetAtTime(0,AU.ctx.currentTime,.15);setTimeout(()=>g.disconnect(),900)}
+  clearInterval(AU.timer);AU.musG=null;if(!nome)return;
+  const cfg=MUSICAS[nome],g=AU.ctx.createGain();g.gain.value=.55;g.connect(AU.master);AU.musG=g;AU.passo=0;AU.prox=AU.ctx.currentTime+.08;
+  AU.timer=setInterval(()=>{const sp=60/cfg.bpm/4;while(AU.prox<AU.ctx.currentTime+.15){tocaPasso(cfg,AU.passo,AU.prox,g);AU.prox+=sp;AU.passo++}},30);
+}
+function musicaDesejada(){
+  if(tel&&tel.tela==='reveal')return null;
+  if(!$('painel').classList.contains('oculta')||ch.aberto||!st||st.estado==='parado')return 'menu';
+  if(st.estado==='fim')return null;if(st.estado==='chefe')return 'chefe';return 'fase';
+}
+// ---- voz de robô (bipes por letra, entra no vídeo) ----
+function vozRobo(dest,t,txt,base,dur){
+  const ps=partes(txt);const passo=dur/Math.max(1,ps.length);
+  ps.forEach((p,i)=>{if(!p.trim())return;const tt=t+i*passo;
+    if(p==='_'){ruido(dest,tt,passo*.8,.08,900,'bandpass');return}
+    const cod=p.toLowerCase().codePointAt(0),vog='aeiouáéíóúâêôãõ'.includes(p.toLowerCase());
+    const f=base*(1+((cod*7)%12)/24)*(vog?1.12:1);
+    tom(dest,tt,f,passo*.9,'square',.07,f*(vog?1.05:.9),.004);tom(dest,tt,f*2.01,passo*.7,'sine',.03)});
+}
+
+// ================= TEMAS DA RODADA =================
+const TEMAS=[
+ {id:'livre',e:'🎲',n:'Livre',ex:['o cachorro do vizinho comeu meu tênis','minha tia caiu da bicicleta rindo','o pastel de feira saiu voando']},
+ {id:'fofoca',e:'🤫',n:'Fofoca',ex:['a vizinha do 302 casou escondida com o porteiro','o professor de história tem um canal de dança','dizem que o padeiro é milionário e não conta']},
+ {id:'noticia',e:'🗞️',n:'Notícia de jornal',ex:['cientistas descobrem que gatos sabem fazer pix','prefeitura troca semáforos por buzinas gigantes','homem vence campeonato de soneca no sofá']},
+ {id:'vilao',e:'😈',n:'Frase de vilão',ex:['vocês nunca vão encontrar o controle remoto','eu escondi todas as meias esquerdas do mundo','hoje à noite o wi-fi será meu']},
+ {id:'casamento',e:'💍',n:'Pedido de casamento',ex:['quer dividir comigo a última coxinha da vida','casa comigo e eu lavo a louça pra sempre','meu coração tem senha e você é a senha']},
+ {id:'vo',e:'👵',n:'Conselho de vó',ex:['nunca saia de casa sem um casaco e uma banana','come que tá magrinho demais menino','quem dorme cedo acorda com o galo cantando']},
+ {id:'desculpa',e:'🙈',n:'Desculpa esfarrapada',ex:['não fiz a lição porque meu peixe comeu o caderno','cheguei atrasado porque o elevador ficou tímido','não respondi porque meu celular estava de férias']}];
+const temaDe=id=>TEMAS.find(t=>t.id===id)||TEMAS[0];
+let telTema='livre';
+
+// ================= MURAL (galeria pública) =================
+let muralAba='top',muralCache=[];
+function escondidosMural(){try{return JSON.parse(ls.get('entrega_mural_esc','{}'))}catch(e){return{}}}
+async function publicaMural(){
+  const d=tel.dados,el=elosDe(d);if(el.length<2)return toast('Precisa de pelo menos 2 entregas');
+  try{await fb.api.muralPublicar(tel.tid,{de:fb.uid,nome:ls.get('entrega_nome','Jogador').slice(0,12),tema:(d.info&&d.info.tema)||'livre',
+      inicio:el[0].txt.slice(0,80),fim:el[el.length-1].vis.slice(0,80),nomes:el.map(e=>e.nome).join(', ').slice(0,120),n:el.length,t:Date.now()});
+    toast('📊 Publicado no mural!');const b=document.querySelector('[data-a="telMural"]');if(b){b.textContent='✅ NO MURAL';b.disabled=true}}
+  catch(e){toast(String(e&&e.message).includes('existe')||String(e&&e.code).includes('PERMISSION')?'Essa roda já está no mural':'⚠️ Não consegui publicar')}
+}
+function muralTopo(){
+  const abas=`<div class="abas" style="grid-template-columns:repeat(2,1fr)"><button class="${muralAba==='top'?'on':''}" data-a="muralAba" data-n="top">🔥 Mais curtidas</button><button class="${muralAba==='novo'?'on':''}" data-a="muralAba" data-n="novo">🆕 Recentes</button></div>`;
+  return `<h2>📊 Mural do Telefone Sem Fio</h2><p style="font-size:14px">As frases mais destruídas do jogo. Curta as melhores! ❤️</p>`+abas}
+async function telaMural(){
+  const topo=muralTopo();
+  if(!conversasAtivas())return painel(topo+'<p class="ruim">O mural precisa do servidor.</p><button class="sec" data-a="menu">VOLTAR</button>');
+  painel(topo+'<p>Carregando…</p><button class="sec" data-a="menu">VOLTAR</button>');
+  try{await fb.iniciar();muralCache=await fb.api.muralLista(150)}catch(e){return painel(topo+'<p class="ruim">Não consegui carregar o mural.</p><button class="sec" data-a="menu">VOLTAR</button>')}
+  renderMural();
+}
+function renderMural(){
+  const topo=muralTopo();
+  const esc_=escondidosMural(),cont=x=>Object.keys(x.curtidas||{}).length;
+  let l=muralCache.filter(x=>!esc_[x.id]);
+  l=muralAba==='top'?l.sort((a,b)=>cont(b)-cont(a)||b.t-a.t):l.sort((a,b)=>b.t-a.t);
+  const cards=l.slice(0,60).map(x=>{const tm=temaDe(x.tema),eu=!!(x.curtidas||{})[fb.uid];
+    return `<div class="mural"><div class="mTema">${tm.e} ${esc(tm.n)} · ${x.n} pessoas</div>
+      <div class="mIni">“${esc(x.inicio)}”</div><div class="mSeta">⬇️ virou ⬇️</div><div class="mFim">“${esc(x.fim)}”</div>
+      <div class="mPe"><small>${esc(x.nomes)}</small>
+      <button class="${eu?'on':''}" data-a="curtir" data-n="${x.id}">❤️ ${cont(x)}</button>
+      ${x.de===fb.uid?`<button data-a="muralApaga" data-n="${x.id}">🗑️</button>`:`<button data-a="muralEsconde" data-n="${x.id}" title="Esconder">🚩</button>`}</div></div>`}).join('');
+  painel(topo+`<div class="murais">${cards||'<p>Nada no mural ainda. Termine uma roda e publique!</p>'}</div><button class="sec" data-a="menu">VOLTAR</button>`);
+}
+async function muralAcao(a,n){
+  if(a==='muralAba'){muralAba=n;renderMural();return}
+  if(a==='curtir'){const x=muralCache.find(m=>m.id===n);if(!x)return;x.curtidas=x.curtidas||{};const ja=!!x.curtidas[fb.uid];
+    if(ja)delete x.curtidas[fb.uid];else{x.curtidas[fb.uid]=true;sfx('clique')}renderMural();
+    try{await fb.api.muralCurtir(n,!ja)}catch(e){toast('⚠️ Não consegui curtir')}return}
+  if(a==='muralEsconde'){const e=escondidosMural();e[n]=1;ls.set('entrega_mural_esc',JSON.stringify(e));renderMural();toast('🚩 Escondido pra você');return}
+  if(a==='muralApaga'){try{await fb.api.muralApagar(n);muralCache=muralCache.filter(m=>m.id!==n);renderMural();toast('🗑️ Removido do mural')}catch(e){toast('⚠️ Não consegui apagar')}return}
+}
+
 // ================= TELEFONE SEM FIO =================
 const tel={tid:null,dados:null,desliga:null,tela:null,prev:'',meuTxt:''};
 function listaTels(){try{return JSON.parse(ls.get('entrega_tels','[]'))}catch(e){return[]}}
@@ -878,12 +1028,19 @@ function htmlTelefone(){
     ${hash?`<div class="bolha cinza" style="margin-top:10px">Te chamaram pra um Telefone Sem Fio!</div><button data-a="telAbrir" data-n="${hash}">📞 ENTRAR NA RODA</button>`:''}
     <label>Quantas pessoas na roda?</label>
     <div class="vis" style="grid-template-columns:repeat(6,1fr)">${[3,4,5,6,7,8].map(n=>`<button class="${telMax===n?'on':''}" data-a="telMax" data-n="${n}">${n}</button>`).join('')}</div>
-    <label>A frase que começa tudo</label><input id="telFrase" maxlength="60" placeholder="o cachorro do vizinho comeu meu tênis">
+    <label>Tema da rodada</label>
+    <div class="temas">${TEMAS.map(t=>`<button class="${telTema===t.id?'on':''}" data-a="telTema" data-n="${t.id}"><b>${t.e}</b>${esc(t.n)}</button>`).join('')}</div>
+    <label>A frase que começa tudo</label>
+    <div class="linha"><div style="flex:3"><input id="telFrase" maxlength="60" placeholder="${esc(temaDe(telTema).ex[0])}"></div><div><button class="sec" data-a="telSorteia" style="margin:0;height:100%">🎲</button></div></div>
     <div class="erro" id="erro"></div>
     <button data-a="telCriar" ${hash?'class="sec"':''}>📞 CRIAR RODA E JOGAR</button>
     ${ls_.length?'<label>Suas rodas</label><div class="convs">'+ls_.map(t=>`<div class="convItem"><button data-a="telAbrir" data-n="${t.tid}"><span>📞 ${esc(t.titulo||'Roda')}<small>${t.criei?'você criou':'você participou'}</small></span></button><button class="lixo" data-a="telLixo" data-n="${t.tid}">🗑️</button></div>`).join('')+'</div>':''}`;
 }
 async function telAcao(a,n){
+  if(a==='telTema'){const f=$('telFrase').value;telTema=n;telaInicio();$('telFrase').value=f;return}
+  if(a==='telSorteia'){const ex=temaDe(telTema).ex;$('telFrase').value=ex[Math.floor(R()*ex.length)];return}
+  if(a==='telMural'){publicaMural();return}
+  if(a==='telNarra'){narracao=!narracao;ls.set('entrega_narra',narracao?'1':'0');telaRevelacao();return}
   if(a==='telMax'){const f=$('telFrase').value;telMax=+n;telaInicio();$('telFrase').value=f;return}
   if(a==='telLixo'){ls.set('entrega_tels',JSON.stringify(listaTels().filter(x=>x.tid!==n)));telaInicio();toast('Roda removida da lista');return}
   if(a==='telCriar'){
@@ -891,7 +1048,7 @@ async function telAcao(a,n){
     if(f.replace(/\s/g,'').length<4)return erro('Escreva uma frase um pouco maior.');
     erro('Criando…');
     try{await fb.iniciar();const tid=novoCid();
-      await fb.api.telCriar(tid,{criador:fb.uid,nome,max:telMax,t:Date.now()});await fb.api.telEntrar(tid,nome);
+      await fb.api.telCriar(tid,{criador:fb.uid,nome,max:telMax,tema:telTema,t:Date.now()});await fb.api.telEntrar(tid,nome);
       salvaTel(tid,{titulo:'Roda de '+nome,criei:1});await telAbre(tid,true);
       if(await fb.api.telVez(tid,nome)){tel.prev='';telJoga(f)}
     }catch(e){erro('Não consegui criar a roda. Confira a internet.')}
@@ -939,13 +1096,15 @@ function telLobby(){
   else if(!el.length)corpo=`<p>⏳ Esperando ${esc(d.info.nome)} começar a roda…</p>`;
   else if(vez)corpo=`<p>🎮 <b>${esc(vez.nome)}</b> está jogando agora. Espere a vez dele terminar…</p>`;
   else corpo=`<p>A frase chegou até aqui depois de ${el.length} pessoa${el.length>1?'s':''}. Agora é você!</p><button data-a="telVez">🎮 JOGAR MINHA VEZ</button>`;
-  painel(`<div class="grande">📞</div><h2>Roda de ${esc(d.info.nome)}</h2>
+  const tm=temaDe(d.info.tema);
+  painel(`<div class="grande">📞</div><h2>Roda de ${esc(d.info.nome)}</h2><p style="font-size:14px;margin:0">Tema: ${tm.e} <b>${esc(tm.n)}</b></p>
     <div class="rota">${bolinhas}</div><p style="font-size:14px">${el.length}/${max} entregas${quem?'<br>'+quem:''}</p>
     ${corpo}<button class="sec" data-a="menu">MENU</button>`);
 }
 function telaReescrever(){
   tel.tela='reescrever';
-  painel(`<div class="grande">📨</div><h2>A frase chegou assim:</h2>
+  const tm=temaDe(tel.dados&&tel.dados.info&&tel.dados.info.tema);
+  painel(`<div class="grande">📨</div><p style="font-size:14px;margin:0">Tema: ${tm.e} ${esc(tm.n)}</p><h2>A frase chegou assim:</h2>
     <div class="bolha" style="font-size:22px">${esc(tel.prev)}</div>
     <label>O que você acha que era? Reescreva do seu jeito:</label>
     <input id="telTexto" maxlength="60" value="${esc(tel.prev.replace(/_/g,''))}">
@@ -982,7 +1141,7 @@ function telaTelPerdeu(motivo){
     <button data-a="telDeNovo">🔁 TENTAR DE NOVO</button><button class="sec" data-a="telDesiste">DESISTIR DA VEZ</button>`);
 }
 // ---------- revelação (canvas) ----------
-const VW=720,VH=1280,T_INTRO=2.6,T_ELO=3.8,T_FIM=5.5;
+const VW=720,VH=1280,T_INTRO=2.6,T_ELO=3.8,T_FIM=6.6;let revTema=null,narracao=ls.get('entrega_narra','1')==='1';
 function duracaoRev(el){return T_INTRO+el.length*T_ELO+T_FIM}
 function quebraLinhas(g,parts,maxW){
   const linhas=[[]];let w=0;const pal=[];let cur=[];
@@ -1017,6 +1176,7 @@ function desenhaRevelacao(g,t,el){
   if(t<T_INTRO){const a=ease(t/.6);g.globalAlpha=a;
     g.fillStyle='#fff';g.font='800 60px "Baloo 2", system-ui';g.fillText(n+' pessoas',VW/2,520);g.fillText('1 frase',VW/2,600);
     g.font='600 34px "Baloo 2", system-ui';g.fillStyle='#bfc8ee';g.fillText('cada uma entregou jogando…',VW/2,690);
+    if(revTema&&revTema.id!=='livre'){g.fillStyle='#ffd24d';g.font='800 40px "Baloo 2", system-ui';g.fillText('tema: '+revTema.e+' '+revTema.n,VW/2,420)}
     desenhaEnvelope(g,VW/2,880+Math.sin(t*5)*18,{cor:CORES_ENV[0],rastro:'padrao',cara:'feliz'},t,{esc:3.4,rot:Math.sin(t*3)*.1});g.globalAlpha=1;return}
   if(atual<n){const e=el[atual],u=t-T_INTRO-atual*T_ELO,entra=ease(u/.45),sai=u>T_ELO-.35?1-ease((u-(T_ELO-.35))/.35):1;
     g.save();g.globalAlpha=Math.min(entra,sai);g.translate((1-entra)*120,0);
@@ -1042,45 +1202,81 @@ function desenhaRevelacao(g,t,el){
   let y=260;rotulo(g,'COMEÇOU ASSIM:',y,'#bfc8ee',34);y+=34;
   const p0=partes(el[0].txt);y+=fraseColorida(g,p0,()=>'#5cf0a8',VW/2,y,VW-120,48)+50;
   rotulo(g,'TERMINOU ASSIM:',y,'#bfc8ee',34);y+=34;
-  const pf=partes(el[n-1].vis),pop=1+Math.max(0,.25-u*.2)*Math.sin(u*20),hf=alturaFrase(g,pf,VW-120,58);
-  g.save();g.translate(VW/2,y+hf/2);g.scale(pop,pop);fraseColorida(g,pf,i=>pf[i]==='_'?'#ff6b8a':'#ff9ad5',0,-hf/2,VW-120,58);g.restore();y+=hf;
-  g.save();g.textAlign='center';g.textBaseline='middle';g.font='130px serif';g.fillText('🤣',VW/2,Math.max(y+110,860)+Math.sin(u*6)*12);g.restore();
+  const pf=partes(el[n-1].vis),hf=alturaFrase(g,pf,VW-120,58),ur=u-1.3;
+  if(ur<0){const k=Math.floor(u/.4);g.save();g.textAlign='center';g.textBaseline='middle';g.fillStyle='#ffd24d';g.font='800 '+(90+k*30)+'px "Baloo 2", system-ui';g.fillText('?'.repeat(Math.min(3,k+1)),VW/2,y+hf/2);g.restore();y+=hf}
+  else{const pop=1+Math.max(0,.35-ur*.25)*Math.sin(ur*20);
+    g.save();g.translate(VW/2,y+hf/2);g.scale(pop,pop);fraseColorida(g,pf,i=>pf[i]==='_'?'#ff6b8a':'#ff9ad5',0,-hf/2,VW-120,58);g.restore();y+=hf;
+    g.save();g.textAlign='center';g.textBaseline='middle';g.font='130px serif';g.globalAlpha*=ease(ur/.4);g.fillText('🤣',VW/2,Math.max(y+110,860)+Math.sin(u*6)*12);g.restore()}
   rotulo(g,'Jogue com seus amigos:',1110,'#ffffff',34);rotulo(g,'luiscodemaster.github.io/entrega',1160,'#5cf0a8',32);
   g.globalAlpha=1;
 }
-let revRaf=null,revT0=0,videoBlob=null,gravando=false;
-function parReveal(){if(revRaf)cancelAnimationFrame(revRaf);revRaf=null}
+let revRaf=null,revT0=0,videoBlob=null,gravando=false,revSom=null,revFalas=[];
+function parReveal(){if(revRaf)cancelAnimationFrame(revRaf);revRaf=null;if(revSom){try{revSom.disconnect()}catch(e){}revSom=null}
+  revFalas.forEach(clearTimeout);revFalas=[];if(window.speechSynthesis)speechSynthesis.cancel()}
+const VOZES=[220,300,180,260,340,200,280,240];
+function agendaRevelacao(dest,T0,el){
+  const n=el.length,dur=duracaoRev(el),cfg=MUSICAS.reveal,sp=60/cfg.bpm/4,bed=AU.ctx.createGain();bed.gain.value=.85;bed.connect(dest);
+  for(let p=0,t=T0;t<T0+dur-T_FIM+1.1;p++,t+=sp)tocaPasso(cfg,p,t,bed,.8);
+  tom(dest,T0+.1,mf(79),.3,'triangle',.2);tom(dest,T0+.25,mf(84),.5,'triangle',.2);
+  el.forEach((e,i)=>{const s=T0+T_INTRO+i*T_ELO;ruido(dest,s,.4,.12,300,'bandpass',3000);
+    vozRobo(dest,s+.05,e.txt,VOZES[i%8],1.2);
+    const pv=partes(e.vis),cor=pv.map((p,k)=>p==='_'?k:-1).filter(k=>k>=0);
+    cor.forEach((k,j)=>tom(dest,s+1.7+j/Math.max(1,cor.length)*.6,mf(70-(j%5)),.08,'sawtooth',.06,mf(50)));
+    if(e.pct>=100)[76,79,84].forEach((m,j)=>tom(dest,s+2.4+j*.07,mf(m),.2,'square',.08));else tom(dest,s+2.4,300,.35,'triangle',.15,120);
+    ruido(dest,s+T_ELO-.6,.5,.1,500,'bandpass',4000)});
+  const F=T0+T_INTRO+n*T_ELO;
+  [0,.4,.8].forEach(x=>bumbo(dest,F+.05+x,.8));
+  ruido(dest,F+1.3,1.4,.3,6000,'highpass');bumbo(dest,F+1.3,.9);
+  [72,76,79,84,88,91].forEach((m,j)=>tom(dest,F+1.35+j*.07,mf(m),.35,'square',.08));
+  vozRobo(dest,F+1.9,el[n-1].vis,150,Math.min(3.2,.09*partes(el[n-1].vis).length));
+  return bed}
+function falar(txt,vel=1.05){if(!window.speechSynthesis||AU.mudo)return;const u=new SpeechSynthesisUtterance(txt.replace(/_+/g,' ').replace(/\s+/g,' '));
+  u.lang=LOCALE;u.rate=vel;u.pitch=.55;speechSynthesis.speak(u)}
+function agendaNarracao(el){
+  if(!narracao)return;el.forEach((e,i)=>{revFalas.push(setTimeout(()=>falar(e.nome+': '+e.vis),(T_INTRO+i*T_ELO+2.0)*1000))});
+  const F=T_INTRO+el.length*T_ELO;revFalas.push(setTimeout(()=>falar('Começou assim: '+el[0].txt,1.15),(F-.1)*1000));
+  revFalas.push(setTimeout(()=>falar('Terminou assim: '+el[el.length-1].vis,.95),(F+1.6)*1000))}
 function telaRevelacao(){
   tel.tela='reveal';const el=elosDe(tel.dados);if(!el.length)return telLobby();
   painel(`<canvas id="revCv" width="${VW}" height="${VH}" style="width:100%;max-width:300px;aspect-ratio:9/16;border-radius:16px;display:block;margin:0 auto 8px"></canvas>
     <div id="revBtns"><button data-a="telVideo">🎬 GERAR VÍDEO PRO SHORT</button></div>
+    <button class="rosa" data-a="telMural">📊 PUBLICAR NO MURAL</button>
+    <button class="sec" data-a="telNarra">🗣️ Narração: ${narracao?'ligada':'desligada'}</button>
+    <p class="dica">O vídeo sai com música, efeitos e a voz de robô. A narração em voz real só toca aqui na tela; pra ter ela no vídeo, use a gravação de tela.</p>
     <div class="erro" id="erro"></div>
     <button class="sec" data-a="telReveal">🔁 VER DE NOVO</button><button class="sec" data-a="telLobby">VOLTAR</button>`);
-  parReveal();revT0=performance.now();const dur=duracaoRev(el);
+  parReveal();revTema=temaDe(tel.dados.info&&tel.dados.info.tema);revT0=performance.now();const dur=duracaoRev(el);
+  if(AU.ctx&&!AU.mudo){revSom=AU.ctx.createGain();revSom.connect(AU.master);agendaRevelacao(revSom,AU.ctx.currentTime+.05,el)}
+  agendaNarracao(el);
   const f=()=>{const c=$('revCv');if(!c||tel.tela!=='reveal'){revRaf=null;return}
     const t=Math.min(dur,(performance.now()-revT0)/1000);desenhaRevelacao(c.getContext('2d'),t,el);revRaf=requestAnimationFrame(f)};f();
 }
 function tipoVideo(){const MR=window.MediaRecorder;if(!MR)return null;
-  for(const tp of ['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'])if(MR.isTypeSupported&&MR.isTypeSupported(tp))return tp;return ''}
+  for(const tp of ['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'])if(MR.isTypeSupported&&MR.isTypeSupported(tp))return tp;return ''}
 async function gravaVideo(){
   if(gravando)return;const tp=tipoVideo();
   const cvTest=document.createElement('canvas');
   if(tp==null||!cvTest.captureStream)return erro('Seu navegador não consegue gravar vídeo. Use a gravação de tela do celular enquanto a revelação passa.');
   const el=elosDe(tel.dados),dur=duracaoRev(el),c=document.createElement('canvas');c.width=VW;c.height=VH;const g=c.getContext('2d');
-  const stream=c.captureStream(30),rec=new MediaRecorder(stream,tp?{mimeType:tp,videoBitsPerSecond:4e6}:{videoBitsPerSecond:4e6}),pedacos=[];
+  parReveal();auInit();let stream=c.captureStream(30),somG=null;
+  if(AU.ctx&&AU.ctx.createMediaStreamDestination){if(AU.ctx.state==='suspended')await AU.ctx.resume();
+    const dst=AU.ctx.createMediaStreamDestination();somG=AU.ctx.createGain();somG.connect(dst);if(!AU.mudo)somG.connect(AU.master);
+    stream=new MediaStream([...stream.getVideoTracks(),...dst.stream.getAudioTracks()])}
+  const rec=new MediaRecorder(stream,tp?{mimeType:tp,videoBitsPerSecond:4e6}:{videoBitsPerSecond:4e6}),pedacos=[];
   rec.ondataavailable=e=>{if(e.data.size)pedacos.push(e.data)};
   gravando=true;const box=$('revBtns');
   const fim=new Promise(r=>rec.onstop=r);rec.start(500);const t0=performance.now();
-  await new Promise(res=>{const f=()=>{const t=(performance.now()-t0)/1000;desenhaRevelacao(g,Math.min(t,dur),el);
+  if(somG)agendaRevelacao(somG,AU.ctx.currentTime+.02,el);const prev=$('revCv');
+  await new Promise(res=>{const f=()=>{const t=(performance.now()-t0)/1000;desenhaRevelacao(g,Math.min(t,dur),el);if(prev)prev.getContext('2d').drawImage(c,0,0);
     if(box)box.innerHTML=`<p>🎬 Gravando… ${Math.min(100,Math.round(t/dur*100))}%</p>`;
     if(t>=dur+.4)res();else requestAnimationFrame(f)};f()});
-  rec.stop();await fim;gravando=false;
+  rec.stop();await fim;gravando=false;if(somG)setTimeout(()=>{try{somG.disconnect()}catch(e){}},300);
   videoBlob=new Blob(pedacos,{type:(rec.mimeType||tp||'video/webm').split(';')[0]});
   const ext=videoBlob.type.includes('mp4')?'mp4':'webm';videoBlob.nome='entrega-telefone-sem-fio.'+ext;
   const podeShare=navigator.canShare&&navigator.canShare({files:[new File([videoBlob],videoBlob.nome,{type:videoBlob.type})]});
   if($('revBtns'))$('revBtns').innerHTML=`<p class="ok">✅ Vídeo pronto (${(videoBlob.size/1048576).toFixed(1)} MB, ${ext.toUpperCase()})</p>
     ${podeShare?'<button data-a="telShare">📤 COMPARTILHAR (YouTube, WhatsApp…)</button>':''}<button class="${podeShare?'sec':''}" data-a="telBaixar">⬇️ BAIXAR VÍDEO</button>
-    <p class="dica">Dica: no YouTube, adicione uma música pelo editor do Shorts.</p>`;
+    <p class="dica">O vídeo já tem música e efeitos. Se for usar a narração real, grave a tela.</p>`;
 }
 function baixaVideo(){if(!videoBlob)return;const a=document.createElement('a');a.href=URL.createObjectURL(videoBlob);a.download=videoBlob.nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),60000)}
 async function compartilhaVideo(){if(!videoBlob)return;
@@ -1166,7 +1362,7 @@ function gerarObstaculo(){
 function gerarItem(){st.itens.push({x:W+30,y:50+R()*(H-100),r:18,t:R()*6})}
 
 // ================= CHEFES =================
-function iniciaChefe(){
+function iniciaChefe(){sfx('alarme');
   const c=st.f.chefe;st.estado='chefe';st.obs=[];
   const hp=Math.round(c.hp*st.hpMul);st.boss={...c,hp,hpMax:hp,x:W+120,alvoX:W-Math.min(130,W*0.18),y:H/2,t:0,atk:1.8,flash:0,entrando:true,dash:null,falaT:3,sub:0,
            escudo:st.online,prog:0,codigo:null,escudoT:0};
@@ -1277,8 +1473,8 @@ function update(dt){
 
   const pr=15;let bate=false;
   for(const i of st.itens)if(Math.hypot(i.x-st.x,i.y-st.y)<i.r+pr){i.pego=true;
-    if(i.k==='letra'){J.c=J.c.filter(x=>x!==i.i);st.letrasPegas++;explodir(i.x,i.y,'#ffd24d',10);st.pegouT={ch:i.ch,v:.7}}
-    else{st.pegos++;st.sinal=Math.min(100,st.sinal+22);explodir(i.x,i.y,'#4fc3ff',14)}}
+    if(i.k==='letra'){J.c=J.c.filter(x=>x!==i.i);st.letrasPegas++;sfx('letra',st.letrasPegas);explodir(i.x,i.y,'#ffd24d',10);st.pegouT={ch:i.ch,v:.7}}
+    else{st.pegos++;sfx('sinal');st.sinal=Math.min(100,st.sinal+22);explodir(i.x,i.y,'#4fc3ff',14)}}
   if(st.fogoSempre&&correndo){for(const m of st.meus)for(const o of st.obs)if(o.k!=='parede'&&!o.morto&&Math.hypot(o.x-m.x,o.y-m.y)<o.r+10){o.morto=m.morto=true;explodir(o.x,o.y,'#ff9a3d',12)}
     st.obs=st.obs.filter(o=>!o.morto);st.meus=st.meus.filter(m=>!m.morto)}
   for(const o of st.obs){
@@ -1297,14 +1493,14 @@ function update(dt){
       if(b.hp<=0){derrotaChefe();return}
     }
   }
-  if(bate&&st.inv<=0&&st.escudos>0){st.escudos--;st.inv=1.2;explodir(st.x,st.y,'#9fd8ff',20);st.banner=1;st.bannerTxt='ESCUDO QUEBROU!';bate=false}
+  if(bate&&st.inv<=0&&st.escudos>0){st.escudos--;sfx('escudo');st.inv=1.2;explodir(st.x,st.y,'#9fd8ff',20);st.banner=1;st.bannerTxt='ESCUDO QUEBROU!';bate=false}
   if(bate&&st.inv<=0){
-    st.vidas--;st.inv=1.4;st.shake=.35;st.sinal=Math.max(0,st.sinal-10);explodir(st.x,st.y,'#ff5577',22);
+    st.vidas--;sfx('dano');st.inv=1.4;st.shake=.35;st.sinal=Math.max(0,st.sinal-10);explodir(st.x,st.y,'#ff5577',22);
     if(modo!=='treino'&&J){corromper(perdaPorDano());st.letraT=1.2}
     if(st.vidas<=0){perdeu('dano');return}
   }
 }
-function derrotaChefe(){
+function derrotaChefe(){sfx('explosao');
   const b=st.boss;
   for(let i=0;i<5;i++)explodir(b.x+(R()-.5)*60,b.y+(R()-.5)*60,i%2?b.cor:'#fff',24);
   st.shake=.6;st.tiros=[];st.obs=[];st.avisos=[];st.boss=null;st.meus=[];
@@ -1313,7 +1509,7 @@ function derrotaChefe(){
   st.bossNome=b.nome;st.bossEmoji=b.emoji;
   if(st.online)atualizaPad();
 }
-function faseVencida(){
+function faseVencida(){sfx('vitoria');
   st.estado='fim';
   if(modo!=='chat'&&modo!=='telefone')ganhaPontos(120+st.vidas*40+st.pegos*10);
   if(modo==='treino'){
@@ -1333,7 +1529,7 @@ function faseVencida(){
   if(J.pos===CORTE)return telaPassar();
   telaFaseOk();
 }
-function perdeu(motivo){
+function perdeu(motivo){sfx('perdeu');
   st.estado='fim';
   if(modo==='chat'){setTimeout(()=>telaChatPerdeu(motivo),500);return}
   if(modo==='telefone'){setTimeout(()=>telaTelPerdeu(motivo),500);return}
@@ -1605,7 +1801,8 @@ function draw(){
 
 // ================= LOOP =================
 let last=performance.now();
-function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();desenhaPreview(t/1000);requestAnimationFrame(loop)}
+$('btnSom').addEventListener('click',()=>{auInit();alternaSom()});$('btnSom').textContent=AU.mudo?'🔇':'🔊';
+function loop(t){const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();if(AU.ctx)musica(musicaDesejada());{const emJogo=st&&$('painel').classList.contains('oculta')&&!ch.aberto&&st.estado!=='parado';$('btnSom').style.display=emJogo?'':'none'}desenhaPreview(t/1000);requestAnimationFrame(loop)}
 if(/^#sala-[A-Z]{4}$/i.test(location.hash))aba='online';
 if(/^#c-[a-z0-9]{10}$/.test(location.hash))aba='conversas';
 if(/^#t-[a-z0-9]{10}$/.test(location.hash))aba='telefone';
