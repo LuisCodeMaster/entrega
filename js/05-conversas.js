@@ -223,7 +223,7 @@ function iniciaEntrega(txt,mimoEnviar=mimoSel){
   const fase=ch.msgs.length%FASES.length;
   fechaChat();modo='chat';fixo=false;resize();fechaPainel();
   dados={de:J.de,para:J.para};
-  novo(fase,{vidas:3+(ef.includes('coracao')?1:0)+(mr&&mr.mimo==='vida'?1:0),sinal:100,primeira:true,ultima:true,dist,semChefe:!comChefe,hpMul:chefeVez?.6:.4,
+  novo(fase,{vidas:4+(ef.includes('coracao')?1:0)+(mr&&mr.mimo==='vida'?1:0),sinal:100,primeira:true,ultima:true,dist,semChefe:!comChefe,hpMul:chefeVez?.6:.4,
     rotulo:chefeVez?'👑 MENSAGEM IMPORTANTE':'ENTREGANDO PRA '+(ch.outro||'SEU AMIGO').toUpperCase()});
   Object.assign(st,{comChefe,efeitos:ef,mimo:mr?mr.mimo:null,mimoEnviar:mimoEnviar||null,letrasPegas:0,
     fila:J.c.map((i,k)=>({i,ch:letrasJ()[i],d:(k+1)/(J.c.length+1)*dist*0.9})),

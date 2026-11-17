@@ -34,7 +34,7 @@ function update(dt){
   if(st.cv&&st.cv.id==='g4'&&correndo){st.zonaT-=dt;if(st.zonaT<=0&&st.dist<st.distMax*.9){st.zonas.push({x:W+20,w:180+R()*160});st.zonaT=4+R()*3}
     for(const z of st.zonas){z.x-=st.vel*dt;if(st.x>z.x&&st.x<z.x+z.w)naZona=true}st.zonas=st.zonas.filter(z=>z.x+z.w>-20)}
   st.naZona=naZona;
-  st.sinal-=((correndo?5+st.n*1.2:3.2)*(st.cv?st.cv.dreno:1)+(naZona?28:0))*dt*(st.online?.8:1);
+  st.sinal-=((correndo?5+st.n*1.2:3.2)*(st.cv?st.cv.dreno:1)*(st.fila?.6:1)+(naZona?28:0))*dt*(st.online?.8:1);
   if(st.sinal<=0){st.sinal=0;perdeu('sinal');return}
   if(st.inv>0)st.inv-=dt;
   if(R()<.8)st.parts.push(particulaRastro());
@@ -45,7 +45,7 @@ function update(dt){
     if(st.fila){while(st.fila.length&&st.dist+W*0.9>=st.fila[0].d){const l=st.fila.shift(),cb=st.cv&&st.cv.id==='cabo';st.itens.push({k:'letra',x:W+30+R()*60,y:cb?H*.3+R()*H*.4:60+R()*(H-120),r:20,t:R()*6,i:l.i,ch:l.ch,oculta:st.cv&&st.cv.id==='radio'&&R()<.5})}}
     if(st.mimo==='tubarao'&&st.dist<st.distMax*.95){st.tubT=(st.tubT||1.5)-dt;if(st.tubT<=0){st.tubT=1.6+R();st.obs.push({k:'peixe',tub:true,x:W+60,y:60+R()*(H-120),r:22,vx:-200-R()*80})}}
     if(st.fogoSempre){st.fogo-=dt;if(st.fogo<=0){st.meus.push({x:st.x+24,y:st.y,vx:620,fogo:1});st.fogo=.32}}
-    if(st.dist<st.distMax*0.95){st.spawn-=dt;if(st.spawn<=0){gerarObstaculo();st.spawn=Math.max(.5,1.25-st.dist/st.distMax*.5-st.n*.08)*(.8+R()*.4)*(st.online?1.15:1)}}
+    if(st.dist<st.distMax*0.95){st.spawn-=dt;if(st.spawn<=0){gerarObstaculo();st.spawn=Math.max(.5,1.25-st.dist/st.distMax*.5-st.n*.08)*(.8+R()*.4)*(st.online?1.15:1)*(st.fila?1.3:1)}}
     st.spawnItem-=dt;if(st.spawnItem<=0){gerarItem();st.spawnItem=(1.5+R()*1.1)*(st.cv&&st.cv.id==='wifi'?.5:1)}
     if(st.dist>=st.distMax&&st.obs.length===0){if(st.semChefe){st.estado='chegando';st.fimT=0;st.tiros=[];st.avisos=[]}else iniciaChefe()}
   }else{

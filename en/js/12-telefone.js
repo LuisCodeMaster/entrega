@@ -59,7 +59,7 @@ async function telAcao(a,n){
   if(a==='telSair'){try{await fb.api.telSair(tel.tid);lobbyContaTel(tel.tid,Math.max(1,telJogadores(tel.dados).length-1))}catch(e){}ls.set('entrega_tels',JSON.stringify(listaTels().filter(x=>x.tid!==tel.tid)));telaInicio();return}
   if(a==='telComecar'){telComecar();return}
   if(a==='telPular'){const o=telOrdem(tel.dados),v=telDaVez(tel.dados);if(!o||!v)return;
-    try{await fb.api.telInfo(tel.tid,{ordem:o.filter(u=>u!==v)});await fb.api.telSoltaVez(tel.tid).catch(()=>{});toast('⏭️ Turn skipped')}catch(e){toast('⚠️ Could not skip')}return}
+    try{const nova=o.filter(u=>u!==v),fimJa=elosDe(tel.dados).length>=nova.length;await fb.api.telInfo(tel.tid,fimJa?{ordem:nova,fim:true}:{ordem:nova});await fb.api.telSoltaVez(tel.tid).catch(()=>{});toast('⏭️ Turn skipped')}catch(e){toast('⚠️ Could not skip')}return}
   if(a==='telEntregar'){const t=limpaEntrada($('telTexto').value.trim());if(t.replace(/\s/g,'').length<2)return erro('Write what you understood.');escolheCanal(t,()=>telJoga(t),()=>{telaReescrever();$('telTexto').value=t});return}
   if(a==='telDesiste'){await fb.api.telSoltaVez(tel.tid).catch(()=>{});telLobby();return}
   if(a==='telDeNovo'){telJoga(tel.meuTxt);return}
@@ -120,7 +120,7 @@ function telLobby(){
   const vezUid=telDaVez(d),vezNome=vezUid?(js.find(j=>j.uid===vezUid)||{}).nome:null;
   const vez=d.vez&&d.vez.ate>Date.now()&&d.vez.uid!==eu?d.vez:null;
   if(fim)corpo=`<p>The round is over! See how the sentence changed from person to person 👇</p><button data-a="telReveal">🎬 SEE THE REVEAL</button>`;
-  else if(ordem&&vezUid===eu)corpo=`<p class="ok"><b>🎮 IT IS YOUR TURN!</b></p><button data-a="telVez">🎮 PLAY MY TURN</button>`;
+  else if(ordem&&vezUid===eu)corpo=`<p class="ok"><b>🎮 IT IS YOUR TURN!</b></p><button data-a="telVez">🎮 PLAY MY TURN</button>${criador?'<button class="sec" data-a="telPular">⏭️ SKIP MY TURN</button>':''}`;
   else if(ordem)corpo=`<p>${joguei?'✅ You already played. ':''}Now it is <b>${esc(vezNome||'?')}</b>'s turn…</p>
     ${criador?`<button class="sec" data-a="telPular">⏭️ SKIP ${esc((vezNome||'').toUpperCase())}</button>`:''}`;
   else if(joguei)corpo=`<p>✅ You already played your turn. ${vez?`<br>🎮 <b>${esc(vez.nome)}</b> is playing now…`:'Now just wait and invite more people!'}</p>${convite}`;
@@ -149,7 +149,7 @@ function telJoga(txt){
   const ef=efeitosDoTexto(txt),el=elosDe(tel.dados),i=el.length;
   let dist=3000+J.c.length*70;if(ef.includes('pergunta'))dist*=.75;
   fechaChat();modo='telefone';fixo=false;resize();fechaPainel();dados={de:J.de,para:'Next'};
-  novo(i%FASES.length,{vidas:3+(ef.includes('coracao')?1:0),sinal:100,primeira:true,ultima:true,dist,semChefe:!ef.includes('socorro'),hpMul:.4,rotulo:'📞 PASSING IT ON'});
+  novo(i%FASES.length,{vidas:4+(ef.includes('coracao')?1:0),sinal:100,primeira:true,ultima:true,dist,semChefe:!ef.includes('socorro'),hpMul:.4,rotulo:'📞 PASSING IT ON'});
   Object.assign(st,{comChefe:ef.includes('socorro'),efeitos:ef,mimo:null,mimoEnviar:null,letrasPegas:0,
     fila:J.c.map((ix,k)=>({i:ix,ch:letrasJ()[ix],d:(k+1)/(J.c.length+1)*dist*0.9})),
     escudos:ef.includes('risada')?1:0,fogoSempre:ef.includes('fogo'),
@@ -158,7 +158,7 @@ function telJoga(txt){
 }
 async function telefoneConcluido(){
   const el=elosDe(tel.dados),i=el.length;
-  if(telFim(tel.dados)||el.some(e=>e.de===fb.uid)){await fb.api.telSoltaVez(tel.tid).catch(()=>{});toast('This round already has your turn (or it ended).');return telLobby()}
+  if(telFim(tel.dados)||el.some(e=>e.de===fb.uid)||(telOrdem(tel.dados)&&telDaVez(tel.dados)!==fb.uid)){await fb.api.telSoltaVez(tel.tid).catch(()=>{});toast('This round already has your turn (or it ended).');return telLobby()}
   const elo={de:fb.uid,nome:ls.get('entrega_nome','Jogador').slice(0,12),recebeu:(tel.prev||'').slice(0,80),txt:J.txt.slice(0,80),vis:textoEstragado().slice(0,80),pct:pctInteiro(),t:Date.now()};if(st.cv)elo.canal=st.cv.id;
   const pts=Math.round((200+st.vidas*120+st.pegos*30+st.letrasPegas*15)*multCanal());
   try{await fb.api.telElo(tel.tid,chaveElo(i),elo);await fb.api.telSoltaVez(tel.tid).catch(()=>{});

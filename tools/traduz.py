@@ -387,6 +387,7 @@ T = [
  ("celular(W+80-(W*0.2+80)*k,H/2,dados.para||'Destino','#ff9ad5')", "celular(W+80-(W*0.2+80)*k,H/2,dados.para||'Destination','#ff9ad5')"),
  ("J=novaJornada(ls.get('entrega_nome','Eu'),ch.outro||'Amigo',txt,'ida');", "J=novaJornada(ls.get('entrega_nome','Me'),ch.outro||'Friend',txt,'ida');"),
  # ---------- sala de espera ----------
+ ("${criador?'<button class=\"sec\" data-a=\"telPular\">⏭️ PULAR MINHA VEZ</button>':''}", "${criador?'<button class=\"sec\" data-a=\"telPular\">⏭️ SKIP MY TURN</button>':''}"),
  ("toast('Ainda não é sua vez!')", "toast('It is not your turn yet!')"),
  ("toast('A roda já encheu!')", "toast('The round is already full!')"),
  ("toast('⚠️ Não consegui entrar')", "toast('⚠️ Could not join')"),
@@ -405,7 +406,7 @@ T = [
  ("acao=`<p>✅ Você está na roda! <b>${js.length}/${max}</b><br><small>Espere todo mundo entrar. O jogo avisa quando for sua vez.</small></p>${convite}<button class=\"sec\" data-a=\"telSair\">SAIR DA RODA</button>`;", "acao=`<p>✅ You are in the round! <b>${js.length}/${max}</b><br><small>Wait for everyone to join. The game tells you when it is your turn.</small></p>${convite}<button class=\"sec\" data-a=\"telSair\">LEAVE ROUND</button>`;"),
  ("acao=`<p><b>${js.length}/${max}</b> pessoas na roda.</p><button data-a=\"telEntrarRoda\">✋ ENTRAR NA RODA</button>`;", "acao=`<p><b>${js.length}/${max}</b> people in the round.</p><button data-a=\"telEntrarRoda\">✋ JOIN THE ROUND</button>`;"),
  ("else acao='<p>😕 Essa roda já encheu.</p>';", "else acao='<p>😕 This round is already full.</p>';"),
- ("corpo=`<p class=\"ok\"><b>🎮 É A SUA VEZ!</b></p><button data-a=\"telVez\">🎮 JOGAR MINHA VEZ</button>`;", "corpo=`<p class=\"ok\"><b>🎮 IT IS YOUR TURN!</b></p><button data-a=\"telVez\">🎮 PLAY MY TURN</button>`;"),
+ ("corpo=`<p class=\"ok\"><b>🎮 É A SUA VEZ!</b></p><button data-a=\"telVez\">🎮 JOGAR MINHA VEZ</button>", "corpo=`<p class=\"ok\"><b>🎮 IT IS YOUR TURN!</b></p><button data-a=\"telVez\">🎮 PLAY MY TURN</button>"),
  ("corpo=`<p>${joguei?'✅ Você já jogou. ':''}Agora é a vez de <b>${esc(vezNome||'?')}</b>…</p>", "corpo=`<p>${joguei?'✅ You already played. ':''}Now it is <b>${esc(vezNome||'?')}</b>'s turn…</p>"),
  ("data-a=\"telPular\">⏭️ PULAR ${esc((vezNome||'').toUpperCase())}</button>", "data-a=\"telPular\">⏭️ SKIP ${esc((vezNome||'').toUpperCase())}</button>"),
  ("if(!fim&&criador&&el.length>=2)corpo+='<button class=\"rosa\" data-a=\"telRevelarJa\">🎬 ENCERRAR E REVELAR AGORA</button>';", "if(!fim&&criador&&el.length>=2)corpo+='<button class=\"rosa\" data-a=\"telRevelarJa\">🎬 END AND REVEAL NOW</button>';"),
