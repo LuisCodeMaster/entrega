@@ -38,7 +38,6 @@ async function telAcao(a,n){
   if(a==='telTema'){const f=$('telFrase').value;telTema=n;telaInicio();$('telFrase').value=f;return}
   if(a==='telSorteia'){const ex=temaDe(telTema).ex;$('telFrase').value=ex[Math.floor(R()*ex.length)];return}
   if(a==='telMural'){publicaMural();return}
-  if(a==='telNarra'){narracao=!narracao;ls.set('entrega_narra',narracao?'1':'0');telaRevelacao();return}
   if(a==='telMax'){const f=$('telFrase').value;telMax=+n;telaInicio();$('telFrase').value=f;return}
   if(a==='telLixo'){ls.set('entrega_tels',JSON.stringify(listaTels().filter(x=>x.tid!==n)));telaInicio();toast('Roda removida da lista');return}
   if(a==='telCriar'){
@@ -199,8 +198,11 @@ function telaTelPerdeu(motivo){
     <button data-a="telDeNovo">🔁 TENTAR DE NOVO</button><button class="sec" data-a="telDesiste">DESISTIR DA VEZ</button>`);
 }
 // ---------- revelação (canvas) ----------
-const VW=720,VH=1280,T_INTRO=2.6,T_ELO=3.8,T_FIM=6.6;let revTema=null,narracao=ls.get('entrega_narra','1')==='1';
-function duracaoRev(el){return T_INTRO+el.length*T_ELO+T_FIM}
+const VW=720,VH=1280,T_INTRO=3.5,T_FIM=9.5;let revTema=null;
+// tempo de cada pessoa: até 6,5 s pra dar tempo de ler; com muita gente encurta um pouco pra o vídeo caber em ~60 s
+function tElo(n){return Math.max(5,Math.min(6.5,(60-T_INTRO-T_FIM)/Math.max(1,n)))}
+const R_DIGITA=2.2,R_ESTRAGA=2.9,R_ESTRAGA_DUR=1.1,R_SUSPENSE=2.0;
+function duracaoRev(el){return T_INTRO+el.length*tElo(el.length)+T_FIM}
 function quebraLinhas(g,parts,maxW){
   const linhas=[[]];let w=0;const pal=[];let cur=[];
   for(const p of parts){if(p===' '){if(cur.length)pal.push(cur);pal.push([' ']);cur=[]}else cur.push(p)}if(cur.length)pal.push(cur);
@@ -226,7 +228,7 @@ function desenhaRevelacao(g,t,el){
   g.textAlign='center';g.textBaseline='middle';g.fillStyle='#5cf0a8';g.font='800 46px "Baloo 2", system-ui';g.fillText('📞 TELEFONE SEM FIO',VW/2,90);
   // trilha de pessoas
   const passo=Math.min(80,(VW-80)/Math.max(1,n));const x0=VW/2-(n-1)*passo/2;
-  const atual=Math.floor((t-T_INTRO)/T_ELO);
+  const T_ELO=tElo(n),atual=Math.floor((t-T_INTRO)/T_ELO);
   el.forEach((e,i)=>{const x=x0+i*passo,ativo=i===atual,feito=t>T_INTRO+i*T_ELO;
     g.fillStyle=ativo?'#ffd24d':feito?'#5cf0a8':'#2f3d7a';g.beginPath();g.arc(x,160,ativo?28:22,0,7);g.fill();
     g.fillStyle='#0b1020';g.font='800 24px "Baloo 2", system-ui';g.fillText((e.nome||'?')[0].toUpperCase(),x,162);
@@ -246,12 +248,12 @@ function desenhaRevelacao(g,t,el){
       const pr=partes(e.recebeu);y+=fraseColorida(g,pr,i=>pr[i]==='_'?'#ff6b8a':'#8f9ad0',VW/2,y,VW-140,40)+40;
       rotulo(g,'entendeu e escreveu:',y);y+=30}
     else{rotulo(g,'começou com:',y);y+=30}
-    const pt=partes(e.txt),pv=partes(e.vis),estraga=ease((u-1.7)/.7);
-    const mostrar=Math.floor(Math.min(1,u/1.2)*pt.length);
+    const pt=partes(e.txt),pv=partes(e.vis),estraga=ease((u-R_ESTRAGA)/R_ESTRAGA_DUR);
+    const mostrar=Math.floor(Math.min(1,u/R_DIGITA)*pt.length);
     const cor=i=>(pv[i]==='_'&&estraga>0)?'#ff4d6d':'#ffffff';
     const alvo=pt.map((p,i)=>(pv[i]==='_'&&estraga>=1)?'_':p);
     y+=fraseColorida(g,alvo,cor,VW/2,y,VW-140,54,mostrar)+50;
-    if(u>1.7){g.globalAlpha*=ease((u-1.7)/.5);rotulo(g,e.pct>=100?'✓✓ chegou inteira!':`💥 chegou ${e.pct}% inteira`,Math.min(y,1060),'#ff9ad5',34)}
+    if(u>R_ESTRAGA+R_ESTRAGA_DUR){g.globalAlpha*=ease((u-R_ESTRAGA-R_ESTRAGA_DUR)/.5);rotulo(g,e.pct>=100?'✓✓ chegou inteira!':`💥 chegou ${e.pct}% inteira`,Math.min(y,1060),'#ff9ad5',34)}
     g.restore();
     const vx=VW/2+(u>T_ELO-.6?ease((u-(T_ELO-.6))/.6)*500:0);
     desenhaEnvelope(g,vx,1170+Math.sin(t*6)*8,{cor:CORES_ENV[0],rastro:'padrao',cara:'feliz'},t,{esc:2});
@@ -261,8 +263,8 @@ function desenhaRevelacao(g,t,el){
   let y=260;rotulo(g,'COMEÇOU ASSIM:',y,'#bfc8ee',34);y+=34;
   const p0=partes(el[0].txt);y+=fraseColorida(g,p0,()=>'#5cf0a8',VW/2,y,VW-120,48)+50;
   rotulo(g,'TERMINOU ASSIM:',y,'#bfc8ee',34);y+=34;
-  const pf=partes(el[n-1].vis),hf=alturaFrase(g,pf,VW-120,58),ur=u-1.3;
-  if(ur<0){const k=Math.floor(u/.4);g.save();g.textAlign='center';g.textBaseline='middle';g.fillStyle='#ffd24d';g.font='800 '+(90+k*30)+'px "Baloo 2", system-ui';g.fillText('?'.repeat(Math.min(3,k+1)),VW/2,y+hf/2);g.restore();y+=hf}
+  const pf=partes(el[n-1].vis),hf=alturaFrase(g,pf,VW-120,58),ur=u-R_SUSPENSE;
+  if(ur<0){const k=Math.floor(u/(R_SUSPENSE/3));g.save();g.textAlign='center';g.textBaseline='middle';g.fillStyle='#ffd24d';g.font='800 '+(90+k*30)+'px "Baloo 2", system-ui';g.fillText('?'.repeat(Math.min(3,k+1)),VW/2,y+hf/2);g.restore();y+=hf}
   else{const pop=1+Math.max(0,.35-ur*.25)*Math.sin(ur*20);
     g.save();g.translate(VW/2,y+hf/2);g.scale(pop,pop);fraseColorida(g,pf,i=>pf[i]==='_'?'#ff6b8a':'#ff9ad5',0,-hf/2,VW-120,58);g.restore();y+=hf;
     g.save();g.textAlign='center';g.textBaseline='middle';g.font='130px serif';g.globalAlpha*=ease(ur/.4);g.fillText('🤣',VW/2,Math.max(y+110,860)+Math.sin(u*6)*12);g.restore()}
@@ -275,38 +277,31 @@ function parReveal(){if(revRaf)cancelAnimationFrame(revRaf);revRaf=null;if(revSo
 const VOZES=[220,300,180,260,340,200,280,240];
 function agendaRevelacao(dest,T0,el){
   const n=el.length,dur=duracaoRev(el),cfg=MUSICAS.reveal,sp=60/cfg.bpm/4,bed=AU.ctx.createGain();bed.gain.value=.85;bed.connect(dest);
-  for(let p=0,t=T0;t<T0+dur-T_FIM+1.1;p++,t+=sp)tocaPasso(cfg,p,t,bed,.8);
+  for(let p=0,t=T0;t<T0+dur-T_FIM+R_SUSPENSE-.2;p++,t+=sp)tocaPasso(cfg,p,t,bed,.8);
   tom(dest,T0+.1,mf(79),.3,'triangle',.2);tom(dest,T0+.25,mf(84),.5,'triangle',.2);
+  const T_ELO=tElo(n);
   el.forEach((e,i)=>{const s=T0+T_INTRO+i*T_ELO;ruido(dest,s,.4,.12,300,'bandpass',3000);
-    vozRobo(dest,s+.05,e.txt,VOZES[i%8],1.2);
+    vozRobo(dest,s+.05,e.txt,VOZES[i%8],R_DIGITA);
     const pv=partes(e.vis),cor=pv.map((p,k)=>p==='_'?k:-1).filter(k=>k>=0);
-    cor.forEach((k,j)=>tom(dest,s+1.7+j/Math.max(1,cor.length)*.6,mf(70-(j%5)),.08,'sawtooth',.06,mf(50)));
-    if(e.pct>=100)[76,79,84].forEach((m,j)=>tom(dest,s+2.4+j*.07,mf(m),.2,'square',.08));else tom(dest,s+2.4,300,.35,'triangle',.15,120);
+    cor.forEach((k,j)=>tom(dest,s+R_ESTRAGA+j/Math.max(1,cor.length)*R_ESTRAGA_DUR,mf(70-(j%5)),.08,'sawtooth',.06,mf(50)));
+    if(e.pct>=100)[76,79,84].forEach((m,j)=>tom(dest,s+R_ESTRAGA+R_ESTRAGA_DUR+j*.07,mf(m),.2,'square',.08));else tom(dest,s+R_ESTRAGA+R_ESTRAGA_DUR,300,.35,'triangle',.15,120);
     ruido(dest,s+T_ELO-.6,.5,.1,500,'bandpass',4000)});
   const F=T0+T_INTRO+n*T_ELO;
-  [0,.4,.8].forEach(x=>bumbo(dest,F+.05+x,.8));
-  ruido(dest,F+1.3,1.4,.3,6000,'highpass');bumbo(dest,F+1.3,.9);
-  [72,76,79,84,88,91].forEach((m,j)=>tom(dest,F+1.35+j*.07,mf(m),.35,'square',.08));
-  vozRobo(dest,F+1.9,el[n-1].vis,150,Math.min(3.2,.09*partes(el[n-1].vis).length));
+  [0,1,2].forEach(k=>bumbo(dest,F+.1+k*R_SUSPENSE/3,.8));
+  ruido(dest,F+R_SUSPENSE,1.4,.3,6000,'highpass');bumbo(dest,F+R_SUSPENSE,.9);
+  [72,76,79,84,88,91].forEach((m,j)=>tom(dest,F+R_SUSPENSE+.05+j*.07,mf(m),.35,'square',.08));
+  vozRobo(dest,F+R_SUSPENSE+.6,el[n-1].vis,150,Math.min(4,.11*partes(el[n-1].vis).length));
   return bed}
-function falar(txt,vel=1.05){if(!window.speechSynthesis||AU.mudo)return;const u=new SpeechSynthesisUtterance(txt.replace(/_+/g,' ').replace(/\s+/g,' '));
-  u.lang=LOCALE;u.rate=vel;u.pitch=.55;speechSynthesis.speak(u)}
-function agendaNarracao(el){
-  if(!narracao)return;el.forEach((e,i)=>{revFalas.push(setTimeout(()=>falar(e.nome+': '+e.vis),(T_INTRO+i*T_ELO+2.0)*1000))});
-  const F=T_INTRO+el.length*T_ELO;revFalas.push(setTimeout(()=>falar('Começou assim: '+el[0].txt,1.15),(F-.1)*1000));
-  revFalas.push(setTimeout(()=>falar('Terminou assim: '+el[el.length-1].vis,.95),(F+1.6)*1000))}
 function telaRevelacao(){
   tel.tela='reveal';const el=elosReais(tel.dados);if(!el.length)return telLobby();
   painel(`<canvas id="revCv" width="${VW}" height="${VH}" style="width:100%;max-width:300px;aspect-ratio:9/16;border-radius:16px;display:block;margin:0 auto 8px"></canvas>
     <div id="revBtns"><button data-a="telVideo">🎬 GERAR VÍDEO PRO SHORT</button></div>
     <button class="rosa" data-a="telMural">📊 PUBLICAR NO MURAL</button>
-    <button class="sec" data-a="telNarra">🗣️ Narração: ${narracao?'ligada':'desligada'}</button>
-    <p class="dica">O vídeo sai com música, efeitos e a voz de robô. A narração em voz real só toca aqui na tela; pra ter ela no vídeo, use a gravação de tela.</p>
     <div class="erro" id="erro"></div>
     <button class="sec" data-a="telReveal">🔁 VER DE NOVO</button><button class="sec" data-a="telLobby">VOLTAR</button>`);
   parReveal();revTema=temaDe(tel.dados.info&&tel.dados.info.tema);revT0=performance.now();const dur=duracaoRev(el);
   if(AU.ctx&&!AU.mudo){revSom=AU.ctx.createGain();revSom.connect(AU.master);agendaRevelacao(revSom,AU.ctx.currentTime+.05,el)}
-  agendaNarracao(el);
+
   const f=()=>{const c=$('revCv');if(!c||tel.tela!=='reveal'){revRaf=null;return}
     const t=Math.min(dur,(performance.now()-revT0)/1000);desenhaRevelacao(c.getContext('2d'),t,el);revRaf=requestAnimationFrame(f)};f();
 }
@@ -335,7 +330,7 @@ async function gravaVideo(){
   const podeShare=navigator.canShare&&navigator.canShare({files:[new File([videoBlob],videoBlob.nome,{type:videoBlob.type})]});
   if($('revBtns'))$('revBtns').innerHTML=`<p class="ok">✅ Vídeo pronto (${(videoBlob.size/1048576).toFixed(1)} MB, ${ext.toUpperCase()})</p>
     ${podeShare?'<button data-a="telShare">📤 COMPARTILHAR (YouTube, WhatsApp…)</button>':''}<button class="${podeShare?'sec':''}" data-a="telBaixar">⬇️ BAIXAR VÍDEO</button>
-    <p class="dica">O vídeo já tem música e efeitos. Se for usar a narração real, grave a tela.</p>`;
+    <p class="dica">O vídeo já sai com música e efeitos sonoros.</p>`;
 }
 function baixaVideo(){if(!videoBlob)return;const a=document.createElement('a');a.href=URL.createObjectURL(videoBlob);a.download=videoBlob.nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),60000)}
 async function compartilhaVideo(){if(!videoBlob)return;
