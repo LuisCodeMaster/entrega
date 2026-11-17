@@ -57,9 +57,9 @@ async function telAcao(a,n){
     const ok=await fb.api.telVez(tel.tid,ls.get('entrega_nome','Jogador')).catch(()=>false);
     if(!ok){toast('Alguém pegou a vez antes de você!');return telLobby()}
     const el=elosReais(d);tel.prev=el.length?el[el.length-1].vis:'';
-    if(!el.length){const f=ls.get('entrega_telfrase_'+tel.tid,'');if(f)return escolheCanal(f,()=>telJoga(f),async()=>{await fb.api.telSoltaVez(tel.tid).catch(()=>{});telLobby()});return telaPrimeiraFrase()}
+    if(!el.length){const f=ls.get('entrega_telfrase_'+tel.tid,'');if(f)return escolheCanal(f,()=>telJoga(f),async()=>{await fb.api.telSoltaVez(tel.tid).catch(()=>{});telLobby()},null,chaveRoleta());return telaPrimeiraFrase()}
     telaReescrever();return}
-  if(a==='telPrimeira'){const f=limpaEntrada($('telTexto').value.trim());if(f.replace(/\s/g,'').length<4)return erro('Escreva uma frase um pouco maior.');ls.set('entrega_telfrase_'+tel.tid,f);escolheCanal(f,()=>telJoga(f),()=>telaPrimeiraFrase());return}
+  if(a==='telPrimeira'){const f=limpaEntrada($('telTexto').value.trim());if(f.replace(/\s/g,'').length<4)return erro('Escreva uma frase um pouco maior.');ls.set('entrega_telfrase_'+tel.tid,f);escolheCanal(f,()=>telJoga(f),()=>telaPrimeiraFrase(),null,chaveRoleta());return}
   if(a==='telEntrarRoda'){const d=tel.dados;if(telJogadores(d).length>=d.info.max)return toast('A roda já encheu!');
     try{await fb.api.telEntrar(tel.tid,ls.get('entrega_nome','Jogador'));lobbyContaTel(tel.tid,telJogadores(d).length+1)}catch(e){toast('⚠️ Não consegui entrar')}return}
   if(a==='telSair'){try{await fb.api.telSair(tel.tid);lobbyContaTel(tel.tid,Math.max(1,telJogadores(tel.dados).length-1))}catch(e){}ls.set('entrega_tels',JSON.stringify(listaTels().filter(x=>x.tid!==tel.tid)));telaInicio();return}
@@ -67,7 +67,7 @@ async function telAcao(a,n){
   if(a==='telComecar'){telComecar();return}
   if(a==='telPular'){const o=telOrdem(tel.dados),v=telDaVez(tel.dados);if(!o||!v)return;
     try{const nova=o.filter(u=>u!==v),fimJa=elosDe(tel.dados).length>=nova.length;await fb.api.telInfo(tel.tid,fimJa?{ordem:nova,fim:true}:{ordem:nova});await fb.api.telSoltaVez(tel.tid).catch(()=>{});toast('⏭️ Vez pulada')}catch(e){toast('⚠️ Não consegui pular')}return}
-  if(a==='telEntregar'){const t=limpaEntrada($('telTexto').value.trim());if(t.replace(/\s/g,'').length<2)return erro('Escreva o que você entendeu.');escolheCanal(t,()=>telJoga(t),()=>{telaReescrever();$('telTexto').value=t});return}
+  if(a==='telEntregar'){const t=limpaEntrada($('telTexto').value.trim());if(t.replace(/\s/g,'').length<2)return erro('Escreva o que você entendeu.');escolheCanal(t,()=>telJoga(t),()=>{telaReescrever();$('telTexto').value=t},null,chaveRoleta());return}
   if(a==='telVolta'){await fb.api.telSoltaVez(tel.tid).catch(()=>{});telLobby();return}
   if(a==='telDesiste'){if(!telOrdem(tel.dados)){await fb.api.telSoltaVez(tel.tid).catch(()=>{});return telLobby()}
     tel.tela='confirma';painel(`<div class="grande">⏭️</div><h2>Pular sua vez?</h2><p>A frase passa pra próxima pessoa do jeito que chegou até você. Você não joga nesta roda.</p>
@@ -167,6 +167,7 @@ function telaReescrever(){
     <button data-a="telEntregar">ENTREGAR ➤</button><button class="sec" data-a="telDesiste">DESISTIR DA VEZ</button>`);
   setTimeout(()=>{const i=$('telTexto');if(i){i.focus();i.select()}},50);
 }
+function chaveRoleta(){return tel.tid+'_'+elosDe(tel.dados).length}
 function telJoga(txt){
   tel.meuTxt=txt;tel.tela='jogando';
   J=novaJornada(ls.get('entrega_nome','Eu'),'próximo',txt,'ida');
@@ -184,7 +185,7 @@ function telJoga(txt){
 async function telefoneConcluido(){
   const el=elosDe(tel.dados),i=el.length;
   if(telFim(tel.dados)||el.some(e=>e.de===fb.uid)||(telOrdem(tel.dados)&&telDaVez(tel.dados)!==fb.uid)){await fb.api.telSoltaVez(tel.tid).catch(()=>{});toast('Essa roda já recebeu sua vez (ou acabou).');return telLobby()}
-  const elo={de:fb.uid,nome:ls.get('entrega_nome','Jogador').slice(0,12),recebeu:(tel.prev||'').slice(0,80),txt:J.txt.slice(0,80),vis:textoEstragado().slice(0,80),pct:pctInteiro(),t:Date.now()};if(st.cv)elo.canal=st.cv.id;
+  const elo={de:fb.uid,nome:ls.get('entrega_nome','Jogador').slice(0,12),recebeu:(tel.prev||'').slice(0,80),txt:J.txt.slice(0,80),vis:textoEstragado().slice(0,80),pct:pctInteiro(),t:Date.now()};if(st.cv)elo.canal=st.cv.id;if(st.desafioNome)elo.desafio=st.desafioNome.slice(0,40);
   const pts=Math.round((200+st.vidas*120+st.pegos*30+st.letrasPegas*15)*multCanal());
   try{await fb.api.telElo(tel.tid,chaveElo(i),elo);await fb.api.telSoltaVez(tel.tid).catch(()=>{});
     const total=(telOrdem(tel.dados)||[]).length||tel.dados.info.max;
@@ -242,7 +243,7 @@ function desenhaRevelacao(g,t,el){
     g.save();g.globalAlpha=Math.min(entra,sai);g.translate((1-entra)*120,0);
     g.fillStyle='rgba(255,255,255,.08)';rrect(g,40,240,VW-80,860,36);g.fill();
     g.fillStyle='#ffd24d';g.font='800 44px "Baloo 2", system-ui';g.fillText(`${atual+1}. ${e.nome}`,VW/2,302);
-    if(e.canal&&canalDe(e.canal))rotulo(g,'via '+canalDe(e.canal).e+' '+canalDe(e.canal).n,346,'#8f9ad0',26);
+    if(e.canal&&canalDe(e.canal))rotulo(g,'via '+canalDe(e.canal).e+' '+canalDe(e.canal).n+' '+(SORTES[SORTE_CANAL[e.canal]]||{e:''}).e,346,'#8f9ad0',26);
     let y=392;
     if(atual>0&&e.recebeu){rotulo(g,'recebeu assim:',y);y+=30;
       const pr=partes(e.recebeu);y+=fraseColorida(g,pr,i=>pr[i]==='_'?'#ff6b8a':'#8f9ad0',VW/2,y,VW-140,40)+40;
@@ -253,7 +254,8 @@ function desenhaRevelacao(g,t,el){
     const cor=i=>(pv[i]==='_'&&estraga>0)?'#ff4d6d':'#ffffff';
     const alvo=pt.map((p,i)=>(pv[i]==='_'&&estraga>=1)?'_':p);
     y+=fraseColorida(g,alvo,cor,VW/2,y,VW-140,54,mostrar)+50;
-    if(u>R_ESTRAGA+R_ESTRAGA_DUR){g.globalAlpha*=ease((u-R_ESTRAGA-R_ESTRAGA_DUR)/.5);rotulo(g,e.pct>=100?'✓✓ chegou inteira!':`💥 chegou ${e.pct}% inteira`,Math.min(y,1060),'#ff9ad5',34)}
+    if(u>R_ESTRAGA+R_ESTRAGA_DUR){g.globalAlpha*=ease((u-R_ESTRAGA-R_ESTRAGA_DUR)/.5);rotulo(g,e.pct>=100?'✓✓ chegou inteira!':`💥 chegou ${e.pct}% inteira`,Math.min(y,1060),'#ff9ad5',34);
+      if(e.desafio)rotulo(g,'🏁 '+e.desafio,Math.min(y,1060)+46,'#5cf0a8',26)}
     g.restore();
     const vx=VW/2+(u>T_ELO-.6?ease((u-(T_ELO-.6))/.6)*500:0);
     desenhaEnvelope(g,vx,1170+Math.sin(t*6)*8,{cor:CORES_ENV[0],rastro:'padrao',cara:'feliz'},t,{esc:2});

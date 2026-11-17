@@ -239,6 +239,8 @@ $('card').addEventListener('click',e=>{
   if(a.startsWith('tel')){telAcao(a,n);return}
   if(['novaConv','entrarConv','abrirConv','entrarConvLink','tentarChat','cancelarChat','lixoConv','remConv','remConvTudo'].includes(a)){acaoConversa(a,n);return}
   if(a==='canal'){canalAtual=n;ls.set('entrega_canal',n);fechaPainel();if(canalCb)canalCb();return}
+  if(a==='rolSorte'){roleta(canalTxt,null);return}
+  if(a==='rolJoga'){if(!rolFim)return;canalAtual=rolFim.id;fechaPainel();if(canalCb)canalCb();return}
   if(a==='canalBloq'){toast('🔵 Bluetooth só leva mensagem de até 20 letras');return}
   if(a==='canalVolta'){canalAtual=null;fechaPainel();if(canalVolta)canalVolta();return}
   if(a==='visual')telaVisual();

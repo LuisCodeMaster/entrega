@@ -104,6 +104,11 @@
   .canais{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
   .canais button{margin:0;padding:8px;text-align:left;background:#232b52;color:#fff;box-shadow:0 4px 0 #161c3a;border-radius:12px;font-size:15px;line-height:1.2}
   .canais button b{display:block;font-size:16px;margin-bottom:2px}.canais button small{display:block;font-size:11.5px;opacity:.85;font-weight:500}
+  .roleta{margin:10px auto;padding:14px;border-radius:18px;background:#232b52;box-shadow:inset 0 0 0 3px #3a4580;text-align:center;max-width:280px}
+  .roleta span{display:block;font-size:64px;line-height:1.1}.roleta b{display:block;font-size:20px;margin-top:4px}
+  .roleta.para{box-shadow:inset 0 0 0 3px #ffd24d,0 0 24px rgba(255,210,77,.45);animation:rolPula .4s}
+  @keyframes rolPula{50%{transform:scale(1.08)}}
+  .sorteTxt{font-family:'Baloo 2',system-ui;font-weight:800;font-size:28px;text-align:center;margin-top:6px}
   .canais button.on{outline:3px solid #5cf0a8}.canais button.bloq{opacity:.45}
   .perfil{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;margin:2px 0 4px}
   .perfil .lang{color:#bfc8ee;font-size:13px;font-weight:700;text-decoration:none;border:1px solid #2f3d7a;border-radius:10px;padding:5px 8px}

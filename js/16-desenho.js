@@ -55,7 +55,7 @@ function desenhaObs(){
         ctx.fillStyle='rgba(120,20,10,.5)';for(let yy=y0;yy<y1;yy+=22)ctx.fillRect(o.x-o.w/2,yy,o.w,3);
       }
       ctx.font='22px serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';
-      ctx.fillText('🔥',o.x,o.gy-6+Math.sin(st.t*10)*2);ctx.fillText('🔥',o.x,o.gy+o.gap+24+Math.sin(st.t*10+1)*2);
+      ctx.fillText(o.emo||'🔥',o.x,o.gy-6+Math.sin(st.t*10)*2);ctx.fillText(o.emo||'🔥',o.x,o.gy+o.gap+24+Math.sin(st.t*10+1)*2);
     }else{
       ctx.save();ctx.translate(o.x,o.y);
       if(o.k==='virus'&&!o.emo)ctx.rotate(st.t*2);
@@ -223,6 +223,12 @@ function draw(){
     if(c==='cabo'){ctx.fillStyle='rgba(20,10,0,.55)';ctx.fillRect(0,0,W,H*.26);ctx.fillRect(0,H*.74,W,H*.26);ctx.strokeStyle='#f2a93b';ctx.lineWidth=4;ctx.strokeRect(-5,H*.26,W+10,H*.48)}
     if(c==='wifi'&&st.inter>0){ctx.fillStyle='rgba(255,255,255,.08)';for(let i=0;i<70;i++)ctx.fillRect(R()*W,R()*H,R()*40,2);ctx.fillStyle='#ffd24d';ctx.font='800 18px "Baloo 2"';ctx.textAlign='center';ctx.fillText('📡 INTERFERÊNCIA!',W/2,H*.2)}
     if(c==='radio'){ctx.fillStyle='rgba(120,85,30,.18)';ctx.fillRect(0,0,W,H);ctx.fillStyle='rgba(0,0,0,.12)';for(let y=(st.t*40)%4;y<H;y+=4)ctx.fillRect(0,y,W,1.5)}
+    if(st.queda>0){const g=ctx.createRadialGradient(st.x,st.y,60,st.x,st.y,150);g.addColorStop(0,'rgba(2,3,8,0)');g.addColorStop(1,'rgba(2,3,8,.96)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#ff6b8a';ctx.font='800 18px "Baloo 2"';ctx.textAlign='center';ctx.fillText('📴 SEM INTERNET…',W/2,H*.2)}
+    if(st.invT>0){ctx.fillStyle='#b48cff';ctx.font='800 16px "Baloo 2"';ctx.textAlign='center';ctx.fillText('🔄 INVERTIDO',st.x,st.y-40)}
+    if(st.desafio){const d=st.desafio,bw=Math.min(W-40,360),bx=(W-bw)/2,by=96;ctx.fillStyle='rgba(0,0,0,.5)';rr(bx-8,by-20,bw+16,40,12);ctx.fill();
+      ctx.fillStyle='#ffd24d';ctx.font='800 14px "Baloo 2"';ctx.textAlign='center';ctx.fillText('🏁 '+d.n+' · '+Math.ceil(Math.max(0,d.t))+'s',W/2,by-3);
+      ctx.fillStyle='rgba(255,255,255,.15)';rr(bx,by+5,bw,7,4);ctx.fill();ctx.fillStyle='#ffd24d';rr(bx,by+5,bw*Math.max(0,d.t/DUR_DESAFIO),7,4);ctx.fill()}
     if(c==='sat'){ctx.fillStyle='rgba(255,255,255,.7)';ctx.font='700 13px "Baloo 2"';ctx.textAlign='center';ctx.fillText('🛰️ atraso de 0,45s',st.x,st.y+40)}}
   if(modo==='chat'&&st.mimo==='neblina'&&st.estado!=='fim'&&st.estado!=='chegando'){const g=ctx.createRadialGradient(st.x,st.y,90,st.x,st.y,200);
     g.addColorStop(0,'rgba(200,210,230,0)');g.addColorStop(1,'rgba(190,200,220,.93)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}

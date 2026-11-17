@@ -18,7 +18,8 @@ function update(dt){
   let ax=0,ay=0;
   if(keys['arrowup']||keys['w'])ay-=1;if(keys['arrowdown']||keys['s'])ay+=1;
   if(keys['arrowleft']||keys['a'])ax-=1;if(keys['arrowright']||keys['d'])ax+=1;
-  const inv=st.mimo==='inv',pes=st.mimo==='lento'?.38:1;if(inv){ay=-ay;ax=-ax}
+  if(st.invT>0)st.invT-=dt;if(st.queda>0)st.queda-=dt;
+  const inv=st.mimo==='inv'||st.invT>0,pes=st.mimo==='lento'?.38:1;if(inv){ay=-ay;ax=-ax}
   let tq=toque?{x:toque.x,y:toque.y}:null;
   if(st.cv&&st.cv.id==='sat'){st.atrasos.push({t:st.t,ax,ay,tq});while(st.atrasos.length>1&&st.t-st.atrasos[1].t>=.45)st.atrasos.shift();
     const v=st.atrasos[0];if(st.t-v.t>=.45){ax=v.ax;ay=v.ay;tq=v.tq}else{ax=ay=0;tq=null}}
@@ -34,6 +35,7 @@ function update(dt){
   if(st.cv&&st.cv.id==='g4'&&correndo){st.zonaT-=dt;if(st.zonaT<=0&&st.dist<st.distMax*.9){st.zonas.push({x:W+20,w:180+R()*160});st.zonaT=4+R()*3}
     for(const z of st.zonas){z.x-=st.vel*dt;if(st.x>z.x&&st.x<z.x+z.w)naZona=true}st.zonas=st.zonas.filter(z=>z.x+z.w>-20)}
   st.naZona=naZona;
+  if(st.cv&&st.cv.id==='vizinho'&&correndo&&!st.desafio){st.quedaT-=dt;if(st.quedaT<=0){st.queda=1.4;st.quedaT=6+R()*4;st.banner=1.2;st.bannerTxt="📴 THE NEIGHBOR'S INTERNET DROPPED!"}}
   st.sinal-=((correndo?5+st.n*1.2:3.2)*(st.cv?st.cv.dreno:1)*(st.fila?.6:1)+(naZona?28:0))*dt*(st.online?.8:1);
   if(st.sinal<=0){st.sinal=0;perdeu('sinal');return}
   if(st.inv>0)st.inv-=dt;
@@ -47,7 +49,9 @@ function update(dt){
     if(st.fogoSempre){st.fogo-=dt;if(st.fogo<=0){st.meus.push({x:st.x+24,y:st.y,vx:620,fogo:1});st.fogo=.32}}
     if(st.dist<st.distMax*0.95){st.spawn-=dt;if(st.spawn<=0){gerarObstaculo();st.spawn=Math.max(.5,1.25-st.dist/st.distMax*.5-st.n*.08)*(.8+R()*.4)*(st.online?1.15:1)*(st.fila?1.3:1)}}
     st.spawnItem-=dt;if(st.spawnItem<=0){gerarItem();st.spawnItem=(1.5+R()*1.1)*(st.cv&&st.cv.id==='wifi'?.5:1)}
-    if(st.dist>=st.distMax&&st.obs.length===0){if(st.semChefe){st.estado='chegando';st.fimT=0;st.tiros=[];st.avisos=[]}else iniciaChefe()}
+    if(st.dist>=st.distMax&&st.semChefe&&st.cv&&!st.desafio&&!st.desafioOk)iniciaDesafio();
+    if(st.desafio)atualizaDesafio(dt);
+    else if(st.dist>=st.distMax&&st.obs.length===0&&st.avisos.length===0){if(st.semChefe){st.estado='chegando';st.fimT=0;st.tiros=[];st.avisos=[]}else iniciaChefe()}
   }else{
     st.spawnItem-=dt;if(st.spawnItem<=0){gerarItem();st.spawnItem=2.2+R()*1.2}
     atualizaChefe(dt);
@@ -60,14 +64,14 @@ function update(dt){
     o.x-=(o.vel||st.vel)*dt;
     if(o.k==='virus'){o.fase+=dt*2.4;o.y=o.base+Math.sin(o.fase)*o.amp}
     if(o.k==='spam'){o.y+=o.vy*dt;if(o.y<30||o.y>H-30)o.vy*=-1}
-    if(o.k==='peixe')o.x+=o.vx*dt;
+    if(o.k==='peixe'){o.x+=o.vx*dt;if(o.vy)o.y+=o.vy*dt;if(o.segue)o.y+=(st.y-o.y)*dt*o.segue}
     if(o.k==='parede'&&o.mov){o.gy+=o.mov*dt;if(o.gy<30||o.gy+o.gap>H-30)o.mov*=-1}
   }
   for(const i of st.itens){i.x-=v*dt;i.t+=dt}
   for(const s of st.tiros){s.x+=s.vx*dt;s.y+=s.vy*dt;s.vida-=dt}
   for(const m of st.meus)m.x+=m.vx*dt;
   for(const a of st.avisos){a.t-=dt;if(a.t<=0)a.ativo+=dt}
-  st.obs=st.obs.filter(o=>o.x>-80);st.itens=st.itens.filter(i=>i.x>-40&&!i.pego);
+  st.obs=st.obs.filter(o=>o.x>-80&&(o.y==null||(o.y>-80&&o.y<H+80)));st.itens=st.itens.filter(i=>i.x>-40&&!i.pego);
   st.tiros=st.tiros.filter(s=>s.vida>0&&s.x>-30&&s.x<W+30&&s.y>-30&&s.y<H+30);
   st.meus=st.meus.filter(m=>m.x<W+20&&!m.morto);
   st.avisos=st.avisos.filter(a=>a.ativo<.35);
