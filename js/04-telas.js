@@ -49,7 +49,7 @@ function telaInicio(){
     `</div><button data-a="treinar">JOGAR FASE ${nivelSel+1}</button>`}
   painel(`<h1>✉️ ENTREGA!</h1>
     <p>Você é uma <b>mensagem</b> viajando de um celular para o outro.</p>
-    <div class="perfil"><a class="lang" href="${LANG_LINK}">${LANG_TXT}</a><span>⭐ ${perfil.pts}</span><button data-a="visual">🎽 Visual</button><button data-a="ranking">🏆 Ranking</button><button data-a="mural">📊 Mural</button><button data-a="som">${AU.mudo?'🔇':'🔊'}</button></div>
+    <div class="perfil"><a class="lang" href="${LANG_LINK}">${LANG_TXT}</a><span>⭐ ${perfil.pts}</span><button data-a="visual">🎽 Visual</button><button data-a="ranking">🏆 Ranking</button><button data-a="mural">📊 Mural</button><button data-a="som">${AU.mudo?'🔇':'🔊'}</button><button data-a="musica" class="${AU.musicaOn?'':'desl'}" title="Música">🎵</button></div>
     <button class="lobbyBtn" data-a="lobby">🌍 LOBBY · salas abertas pra entrar</button>
     <div class="abas" style="grid-template-columns:repeat(3,1fr)">
       <button class="${aba==='conversas'?'on':''}" data-a="aba" data-n="conversas">💬<br>Conversa</button>
@@ -247,6 +247,7 @@ $('card').addEventListener('click',e=>{
   if(a==='ranking')telaRanking();
   if(a==='mural'){muralAba='top';telaMural()}
   if(a==='som'){alternaSom();telaInicio()}
+  if(a==='musica'){toast(alternaMusica()?'🎵 Música ligada':'🎵 Música desligada (efeitos continuam)');telaInicio()}
   if(['muralAba','curtir','muralEsconde','muralApaga'].includes(a)){muralAcao(a,n);return}
   if(a.startsWith('lobby')||a==='publico'){lobbyAcao(a,n);return}
   if(a==='rankAba'){rankAba=n;telaRanking()}

@@ -386,6 +386,9 @@ T = [
  ("celular(sx,H/2,dados.de||'Você','#5cf0a8')", "celular(sx,H/2,dados.de||'You','#5cf0a8')"),
  ("celular(W+80-(W*0.2+80)*k,H/2,dados.para||'Destino','#ff9ad5')", "celular(W+80-(W*0.2+80)*k,H/2,dados.para||'Destination','#ff9ad5')"),
  ("J=novaJornada(ls.get('entrega_nome','Eu'),ch.outro||'Amigo',txt,'ida');", "J=novaJornada(ls.get('entrega_nome','Me'),ch.outro||'Friend',txt,'ida');"),
+ # ---------- música ----------
+ ("toast(alternaMusica()?'🎵 Música ligada':'🎵 Música desligada (efeitos continuam)')", "toast(alternaMusica()?'🎵 Music on':'🎵 Music off (sound effects stay on)')"),
+ ('title="Música">🎵</button>', 'title="Music">🎵</button>'),
  # ---------- pular a própria vez ----------
  ("painel(`<div class=\"grande\">⏭️</div><h2>Pular sua vez?</h2><p>A frase passa pra próxima pessoa do jeito que chegou até você. Você não joga nesta roda.</p>", "painel(`<div class=\"grande\">⏭️</div><h2>Skip your turn?</h2><p>The sentence goes to the next person exactly as it reached you. You will not play in this round.</p>"),
  ('<button class="rosa" data-a="telPularEu">⏭️ SIM, PULAR MINHA VEZ</button><button class="sec" data-a="telVoltaVez">NÃO, QUERO JOGAR</button>', '<button class="rosa" data-a="telPularEu">⏭️ YES, SKIP MY TURN</button><button class="sec" data-a="telVoltaVez">NO, I WANT TO PLAY</button>'),

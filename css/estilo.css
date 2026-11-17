@@ -129,3 +129,4 @@
   .vaga{background:#1a2142;border:2px dashed #2f3d7a;border-radius:10px;padding:7px 10px;font-size:15px;opacity:.7}
   .vaga.ok{background:#1f4f3f;border:2px solid #2a9e66;opacity:1}
   .vaga.agora{background:#4a3d10;border:2px solid #ffd24d;opacity:1}
+  .perfil button.desl{opacity:.4;text-decoration:line-through}
