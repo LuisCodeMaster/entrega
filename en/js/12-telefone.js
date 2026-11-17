@@ -74,6 +74,7 @@ async function telAcao(a,n){
       <button class="rosa" data-a="telPularEu">⏭️ YES, SKIP MY TURN</button><button class="sec" data-a="telVoltaVez">NO, I WANT TO PLAY</button>`);return}
   if(a==='telVoltaVez'){const el=elosReais(tel.dados);tel.prev=el.length?el[el.length-1].vis:'';return el.length?telaReescrever():telaPrimeiraFrase()}
   if(a==='telPularEu'){await telPularEu();return}
+  if(a==='telVivo'){vivoAssistir();return}
   if(a==='telDeNovo'){telJoga(tel.meuTxt);return}
   if(a==='telRevelarJa'){try{await fb.api.telEncerra(tel.tid);fb.api.lobbyTirar('t-'+tel.tid).catch(()=>{})}catch(e){toast('⚠️ Could not end the round')}return}
   if(a==='telLobby'){parReveal();telLobby();return}
@@ -146,11 +147,11 @@ function telLobby(){
   if(fim&&!elosReais(d).length)corpo='<p>The round ended with no deliveries. 😅</p>';
   else if(fim)corpo=`<p>The round is over! See how the sentence changed from person to person 👇</p><button data-a="telReveal">🎬 SEE THE REVEAL</button>`;
   else if(ordem&&vezUid===eu)corpo=`<p class="ok"><b>🎮 IT IS YOUR TURN!</b></p><button data-a="telVez">🎮 PLAY MY TURN</button>${criador?'<button class="sec" data-a="telPular">⏭️ SKIP MY TURN</button>':''}`;
-  else if(ordem)corpo=`<p>${joguei?'✅ You already played. ':''}Now it is <b>${esc(vezNome||'?')}</b>'s turn…</p>
+  else if(ordem)corpo=`<p>${joguei?'✅ You already played. ':''}Now it is <b>${esc(vezNome||'?')}</b>'s turn…</p>${vez?'<button class="rosa" data-a="telVivo">👀 WATCH LIVE</button>':''}
     ${criador?`<button class="sec" data-a="telPular">⏭️ SKIP ${esc((vezNome||'').toUpperCase())}</button>`:''}`;
-  else if(joguei)corpo=`<p>✅ You already played your turn. ${vez?`<br>🎮 <b>${esc(vez.nome)}</b> is playing now…`:'Now just wait and invite more people!'}</p>${convite}`;
+  else if(joguei)corpo=`<p>✅ You already played your turn. ${vez?`<br>🎮 <b>${esc(vez.nome)}</b> is playing now…`:'Now just wait and invite more people!'}</p>${vez?'<button class="rosa" data-a="telVivo">👀 WATCH LIVE</button>':''}${convite}`;
   else if(!el.length)corpo=`<p>⏳ Waiting for ${esc(d.info.nome)} to start the round…</p>`;
-  else if(vez)corpo=`<p>🎮 <b>${esc(vez.nome)}</b> is playing now. Wait for their turn to end…</p>`;
+  else if(vez)corpo=`<p>🎮 <b>${esc(vez.nome)}</b> is playing now. Wait for their turn to end…</p><button class="rosa" data-a="telVivo">👀 WATCH LIVE</button>`;
   else corpo=`<p>The sentence got here after ${el.length} ${el.length>1?'people':'person'}. Your turn!</p><button data-a="telVez">🎮 PLAY MY TURN</button>`;
   if(!fim&&criador&&el.length>=2)corpo+='<button class="rosa" data-a="telRevelarJa">🎬 END AND REVEAL NOW</button>';
   painel(`${topo}${lista}${corpo}<div class="linha"><div><button class="sec" data-a="telRecarrega">🔄 REFRESH</button></div><div><button class="sec" data-a="menu">MENU</button></div></div>`);
@@ -180,7 +181,7 @@ function telJoga(txt){
     fila:J.c.map((ix,k)=>({i:ix,ch:letrasJ()[ix],d:(k+1)/(J.c.length+1)*dist*0.9})),
     escudos:ef.includes('risada')?1:0,fogoSempre:ef.includes('fogo'),
     filaAvisos:['GRAB THE LETTERS!',...ef.map(k=>EFEITOS[k])]});
-  aplicaCanal();
+  aplicaCanal();vivoComeca();
 }
 async function telefoneConcluido(){
   const el=elosDe(tel.dados),i=el.length;

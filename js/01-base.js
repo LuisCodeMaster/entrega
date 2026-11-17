@@ -1,4 +1,4 @@
-const VERSAO=19;const ARQ_VERSAO='version.json';
+const VERSAO=20;const ARQ_VERSAO='version.json';
 const SITE_RAIZ='https://luiscodemaster.github.io/entrega/';const SITE=SITE_RAIZ;const LANG_LINK='en/';const LANG_TXT='🇺🇸 EN';const LOCALE='pt-BR';
 const NO_CLAUDE=/claude\.ai|claudeusercontent|anthropic/.test(location.hostname);
 const LINK=NO_CLAUDE?'https://claude.ai/artifact/YNVSU23sJdKwRsfFKtAP6f':SITE;

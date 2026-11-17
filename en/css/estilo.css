@@ -135,4 +135,6 @@
   .vaga.ok{background:#1f4f3f;border:2px solid #2a9e66;opacity:1}
   .vaga.agora{background:#4a3d10;border:2px solid #ffd24d;opacity:1}
   .perfil button.desl{opacity:.4;text-decoration:line-through}
+  #vivoBar{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:10px;padding:6px 6px 6px 14px;border-radius:16px;background:rgba(10,14,30,.82);color:#fff;font-weight:700;font-size:14px;max-width:94vw;box-shadow:0 0 0 2px #ff4d6d}
+  #vivoBar.oculta{display:none}#vivoBar button{width:auto;margin:0;padding:8px 12px;font-size:13px;border-radius:12px;background:#ff4d6d;color:#fff;box-shadow:none}
   #novaVersao{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:20;width:auto;max-width:92vw;margin:0;padding:10px 16px;font-size:15px;border-radius:14px;background:#ffd24d;color:#3a2a00;box-shadow:0 6px 20px rgba(0,0,0,.45)}

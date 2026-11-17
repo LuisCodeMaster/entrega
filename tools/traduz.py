@@ -177,7 +177,8 @@ T = [
  ("corpo=`<p>✅ Você já jogou sua vez. ${vez?`<br>🎮 <b>${esc(vez.nome)}</b> está jogando agora…`:'Agora é só esperar e chamar mais gente!'}</p>", "corpo=`<p>✅ You already played your turn. ${vez?`<br>🎮 <b>${esc(vez.nome)}</b> is playing now…`:'Now just wait and invite more people!'}</p>"),
  ('<textarea id="share" rows="4" readonly>${esc(telShareTxt())}</textarea><button class="sec" data-a="copiar">📋 COPIAR CONVITE</button>', '<textarea id="share" rows="4" readonly>${esc(telShareTxt())}</textarea><button class="sec" data-a="copiar">📋 COPY INVITE</button>'),
  ("corpo=`<p>⏳ Esperando ${esc(d.info.nome)} começar a roda…</p>`;", "corpo=`<p>⏳ Waiting for ${esc(d.info.nome)} to start the round…</p>`;"),
- ("corpo=`<p>🎮 <b>${esc(vez.nome)}</b> está jogando agora. Espere a vez dele terminar…</p>`;", "corpo=`<p>🎮 <b>${esc(vez.nome)}</b> is playing now. Wait for their turn to end…</p>`;"),
+ ("corpo=`<p>🎮 <b>${esc(vez.nome)}</b> está jogando agora. Espere a vez dele terminar…</p>", "corpo=`<p>🎮 <b>${esc(vez.nome)}</b> is playing now. Wait for their turn to end…</p>"),
+ ('<button class="rosa" data-a="telVivo">👀 ASSISTIR AO VIVO</button>`;', '<button class="rosa" data-a="telVivo">👀 WATCH LIVE</button>`;'),
  ("corpo=`<p>A frase chegou até aqui depois de ${el.length} pessoa${el.length>1?'s':''}. Agora é você!</p><button data-a=\"telVez\">🎮 JOGAR MINHA VEZ</button>`;", "corpo=`<p>The sentence got here after ${el.length} ${el.length>1?'people':'person'}. Your turn!</p><button data-a=\"telVez\">🎮 PLAY MY TURN</button>`;"),
  ('<p style="font-size:14px">${el.length}/${max} entregas</p>', '<p style="font-size:14px">${el.length}/${max} deliveries</p>'),
  ('<p style="font-size:14px;margin:0">Tema: ${tm.e} ${esc(tm.n)}</p><h2>A frase chegou assim:</h2>', '<p style="font-size:14px;margin:0">Theme: ${tm.e} ${esc(tm.n)}</p><h2>The sentence arrived like this:</h2>'),
@@ -256,6 +257,18 @@ T = [
  ("st.bannerTxt='📴 CAIU A INTERNET DO VIZINHO!'", "st.bannerTxt=\"📴 THE NEIGHBOR'S INTERNET DROPPED!\""),
  ("ctx.fillText('📴 SEM INTERNET…',W/2,H*.2)", "ctx.fillText('📴 NO INTERNET…',W/2,H*.2)"),
  ("ctx.fillText('🔄 INVERTIDO',st.x,st.y-40)", "ctx.fillText('🔄 FLIPPED',st.x,st.y-40)"),
+
+
+ # ---------- assistir ao vivo ----------
+ ("'<button class=\"rosa\" data-a=\"telVivo\">👀 ASSISTIR AO VIVO</button>'", "'<button class=\"rosa\" data-a=\"telVivo\">👀 WATCH LIVE</button>'"),
+ ("'👀 '+n+(n>1?' PESSOAS ASSISTINDO':' PESSOA ASSISTINDO')", "'👀 '+n+(n>1?' PEOPLE WATCHING':' PERSON WATCHING')"),
+ ("return toast('Ninguém está jogando agora')", "return toast('Nobody is playing right now')"),
+ ("return toast('⚠️ Ao vivo indisponível')", "return toast('⚠️ Live view unavailable')"),
+ ("vivo.perdeu?`💥 ${vivo.nome} se perdeu… esperando tentar de novo`:vivo.viu?`🔴 AO VIVO · ${vivo.nome}`:`⏳ Conectando com ${vivo.nome}…`", "vivo.perdeu?`💥 ${vivo.nome} got lost… waiting for a retry`:vivo.viu?`🔴 LIVE · ${vivo.nome}`:`⏳ Connecting to ${vivo.nome}…`"),
+ ("toast(`✅ ${vivo.nome} entregou a frase!`)", "toast(`✅ ${vivo.nome} delivered the sentence!`)"),
+ ("toast('📴 A transmissão caiu')", "toast('📴 The stream dropped')"),
+ ("toast(acabou?'A vez dessa pessoa já acabou':'📴 Sem transmissão (a pessoa pode estar com uma versão antiga do jogo)')", "toast(acabou?\"That player's turn is already over\":'📴 No stream (the player may be on an old version of the game)')"),
+ ('<button id="vivoSair">✖ SAIR</button>', '<button id="vivoSair">✖ EXIT</button>'),
 
  # ---------- mural ----------
  ("toast('Precisa de pelo menos 2 entregas')", "toast('Needs at least 2 deliveries')"),

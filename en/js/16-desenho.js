@@ -180,7 +180,7 @@ function hud(){
     const p=Math.min(1,st.dist/st.distMax);
     ctx.fillStyle='rgba(255,255,255,.15)';rr(bx+30,by+10,bw-60,8,4);ctx.fill();
     ctx.fillStyle='#5cf0a8';rr(bx+30,by+10,(bw-60)*p,8,4);ctx.fill();
-    ctx.font='700 13px "Baloo 2"';ctx.fillStyle='#fff';ctx.textAlign='left';ctx.fillText(modo==='chat'?'💬':modo==='telefone'?'📞':J&&modo!=='treino'?(J.pos+1)+'/5':'F'+(st.n+1),bx-4,by+20);
+    ctx.font='700 13px "Baloo 2"';ctx.fillStyle='#fff';ctx.textAlign='left';ctx.fillText(st.vivo?'👀':modo==='chat'?'💬':modo==='telefone'?'📞':J&&modo!=='treino'?(J.pos+1)+'/5':'F'+(st.n+1),bx-4,by+20);
     ctx.font='18px serif';ctx.textAlign='right';ctx.fillText(st.semChefe?'📱':st.f.chefe.emoji,bx+bw+6,by+22);
     ctx.textAlign='center';ctx.fillText('✉️',bx+30+(bw-60)*p,by+12);
   }
@@ -194,7 +194,8 @@ function hud(){
   if(modo==='online'){ctx.font='800 12px "Baloo 2"';ctx.textAlign='left';ctx.fillStyle=net.souPiloto?'#5cf0a8':'#ffd24d';
     ctx.fillText(net.souPiloto?'🕹️ PILOT':'📡 OPERATOR · tap to mark danger',14,sy+46)}
   // texto da mensagem (só quem escreveu vê no online)
-  const verTexto=J&&(modo==='jornada'||modo==='chat'||modo==='telefone'||(modo==='online'&&net.role==='host'));
+  if(st.vivo&&st.vivoTx){ctx.font='700 14px "Baloo 2"';const mw=Math.min(W*0.6,ctx.measureText(st.vivoTx).width+24);ctx.fillStyle='rgba(0,0,0,.45)';rr(14,H-44,mw,30,10);ctx.fill();ctx.textAlign='left';ctx.fillStyle='#e9f3ff';ctx.fillText(st.vivoTx,26,H-24)}
+  const verTexto=!st.vivo&&J&&(modo==='jornada'||modo==='chat'||modo==='telefone'||(modo==='online'&&net.role==='host'));
   if(verTexto&&!(modo==='online'&&!net.souPiloto)){
     const txt=textoEstragado();ctx.font='700 14px "Baloo 2"';
     const mw=Math.min(W*0.6,ctx.measureText(txt).width+24);
@@ -218,7 +219,7 @@ function draw(){
   fundo();desenhaAvisos();desenhaObs();desenhaChefe();desenhaTiros();desenhaParts();
   if(st.estado!=='fim'&&st.estado!=='parado')mensagem();
   if(modo==='online'&&st.estado!=='fim'){if(net.souPiloto)escuridao();else camadaOperador()}
-  if(st.cv&&st.estado==='corrida'){const c=st.cv.id;
+  if(st.cv&&(st.estado==='corrida'||(st.vivo&&st.remEstado==='corrida'))){const c=st.cv.id;
     if(c==='g4')for(const z of st.zonas){ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(z.x,0,z.w,H);ctx.fillStyle='rgba(255,255,255,.75)';ctx.font='800 18px "Baloo 2"';ctx.textAlign='center';ctx.fillText('📵 DEAD ZONE',z.x+z.w/2,H/2)}
     if(c==='cabo'){ctx.fillStyle='rgba(20,10,0,.55)';ctx.fillRect(0,0,W,H*.26);ctx.fillRect(0,H*.74,W,H*.26);ctx.strokeStyle='#f2a93b';ctx.lineWidth=4;ctx.strokeRect(-5,H*.26,W+10,H*.48)}
     if(c==='wifi'&&st.inter>0){ctx.fillStyle='rgba(255,255,255,.08)';for(let i=0;i<70;i++)ctx.fillRect(R()*W,R()*H,R()*40,2);ctx.fillStyle='#ffd24d';ctx.font='800 18px "Baloo 2"';ctx.textAlign='center';ctx.fillText('📡 INTERFERENCE!',W/2,H*.2)}

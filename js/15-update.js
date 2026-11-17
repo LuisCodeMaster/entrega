@@ -7,7 +7,8 @@ function update(dt){
   if(st.meuCmd){st.meuCmd.v-=dt;if(st.meuCmd.v<=0)st.meuCmd=null}
   if(st.luz>0)st.luz-=dt;if(st.luzCd>0)st.luzCd-=dt;
   atualizaParts(dt);
-  if(st.estado==='espectador'){st.scroll+=150*dt;return}
+  vivoTransmite(dt);
+  if(st.estado==='espectador'){if(st.vivo){vivoPasso(dt);return}st.scroll+=150*dt;return}
   if(st.estado==='fim'||st.estado==='parado'){st.scroll+=60*dt;return}
   const correndo=st.estado==='corrida';
   st.scroll+=st.vel*dt*(correndo?1:.45);

@@ -45,6 +45,13 @@ const fb={pronto:false,uid:null,api:null,erro:null,
       telEncerra:tid=>D.update(r(`telefones/${tid}/info`),{fim:true}),
       telInfo:(tid,d)=>D.update(r(`telefones/${tid}/info`),d),
       telSair:tid=>D.remove(r(`telefones/${tid}/jogadores/${this.uid}`)),
+      // ao vivo: tenta um nó próprio; se as regras não deixarem, usa um irmão dentro de telefones
+      vivoMandar:async(tid,snap)=>{const bases=[`aovivo/${tid}`,`telefones/${tid}_vivo`];
+        while((this.vivoI||0)<bases.length){const i=this.vivoI||0;try{await D.set(r(bases[i]+'/s'),snap);return true}catch(e){if(!/permission/i.test(e&&(e.code||e.message)||''))throw e;if((this.vivoI||0)===i)this.vivoI=i+1}}return false},
+      vivoOuvir:(tid,cb)=>{const offs=[`aovivo/${tid}/s`,`telefones/${tid}_vivo/s`].map(c=>D.onValue(r(c),s=>cb(s.val()),()=>{}));return()=>offs.forEach(f=>f())},
+      vivoAssistir:(tid)=>{let feito=null;(async()=>{for(const c of [`aovivo/${tid}/v/${this.uid}`,`telefones/${tid}_vivo/v/${this.uid}`]){try{const ref=r(c);await D.set(ref,true);await D.onDisconnect(ref).remove();feito=ref;return}catch(e){}}})();
+        return()=>{if(feito){D.remove(feito).catch(()=>{});D.onDisconnect(feito).cancel().catch(()=>{})}}},
+      vivoContar:(tid,cb)=>{const q={};const offs=[`aovivo/${tid}/v`,`telefones/${tid}_vivo/v`].map((c,k)=>D.onValue(r(c),s=>{q[k]=Object.keys(s.val()||{});cb(new Set([...(q[0]||[]),...(q[1]||[])]).size)},()=>{}));return()=>offs.forEach(f=>f())},
       lobbyPor:async(id,d,somePraSempre)=>{const ref=r(`lobby/${id}`);await D.set(ref,d);if(somePraSempre)await D.onDisconnect(ref).remove()},
       lobbyTirar:id=>D.remove(r(`lobby/${id}`)),
       lobbyFeito:(id,n)=>D.set(r(`lobby/${id}/feitos`),n),
