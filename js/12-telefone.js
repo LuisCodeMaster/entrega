@@ -1,6 +1,12 @@
 // ================= TELEFONE SEM FIO =================
 const tel={tid:null,dados:null,desliga:null,tela:null,prev:'',meuTxt:''};
-function listaTels(){try{return JSON.parse(ls.get('entrega_tels','[]'))}catch(e){return[]}}
+setInterval(()=>{if(tel.tela==='lobby'&&tel.dados&&!document.hidden)telLobby()},8000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&tel.tela==='lobby'&&tel.tid)telAbre(tel.tid).catch(()=>{})});
+function listaTels(){let l;try{l=JSON.parse(ls.get('entrega_tels','[]'))}catch(e){l=[]}
+  const lim=Date.now()-3*864e5;return l.filter(x=>(x.t||x.vista||Date.now())>lim)}
+function infoRoda(t){const h=t.t?new Date(t.t).toLocaleTimeString(LOCALE,{hour:'2-digit',minute:'2-digit'}):'';const d=t.t?new Date(t.t).toLocaleDateString(LOCALE,{day:'2-digit',month:'2-digit'}):'';
+  const st=t.estado==='fim'?'🏁 acabou':t.estado==='espera'?`⏳ esperando ${t.dentro||'?'}/${t.max||'?'}`:t.estado==='jogando'?`🎮 jogando ${t.feitos||0}/${t.total||'?'}`:'';
+  const tm=t.tema?temaDe(t.tema).e:'';return [st,tm,d&&h?`${d} ${h}`:'',t.criei?'você criou':t.entrei?'você entrou':'você viu'].filter(Boolean).join(' · ')}
 function salvaTel(tid,d){const l=listaTels().filter(x=>x.tid!==tid),v=listaTels().find(x=>x.tid===tid)||{};l.unshift({...v,tid,...d});ls.set('entrega_tels',JSON.stringify(l.slice(0,30)))}
 function elosDe(d){return Object.entries((d&&d.elos)||{}).sort((a,b)=>a[0]<b[0]?-1:1).map(([k,v])=>({k,...limpaObj(v,['txt','vis','recebeu','nome'])}))}
 function telOrdem(d){const o=d&&d.info&&d.info.ordem;return o?Object.keys(o).sort((a,b)=>a-b).map(k=>o[k]):null}
@@ -26,7 +32,7 @@ function htmlTelefone(){
     <div class="erro" id="erro"></div>
     ${htmlPublico()}
     <button data-a="telCriar" ${hash?'class="sec"':''}>📞 CRIAR RODA</button>
-    ${ls_.length?'<label>Suas rodas</label><div class="convs">'+ls_.map(t=>`<div class="convItem"><button data-a="telAbrir" data-n="${t.tid}"><span>📞 ${esc(t.titulo||'Roda')}<small>${t.criei?'você criou':'você participou'}</small></span></button><button class="lixo" data-a="telLixo" data-n="${t.tid}">🗑️</button></div>`).join('')+'</div>':''}`;
+    ${ls_.length?'<label>Suas rodas</label><div class="convs">'+ls_.sort((a,b)=>(b.t||0)-(a.t||0)).map(t=>`<div class="convItem"><button data-a="telAbrir" data-n="${t.tid}"><span>📞 ${esc(t.titulo||'Roda')}<small>${infoRoda(t)}</small></span></button><button class="lixo" data-a="telLixo" data-n="${t.tid}">🗑️</button></div>`).join('')+'</div>':''}`;
 }
 async function telAcao(a,n){
   if(a==='telTema'){const f=$('telFrase').value;telTema=n;telaInicio();$('telFrase').value=f;return}
@@ -58,6 +64,7 @@ async function telAcao(a,n){
   if(a==='telEntrarRoda'){const d=tel.dados;if(telJogadores(d).length>=d.info.max)return toast('A roda já encheu!');
     try{await fb.api.telEntrar(tel.tid,ls.get('entrega_nome','Jogador'));lobbyContaTel(tel.tid,telJogadores(d).length+1)}catch(e){toast('⚠️ Não consegui entrar')}return}
   if(a==='telSair'){try{await fb.api.telSair(tel.tid);lobbyContaTel(tel.tid,Math.max(1,telJogadores(tel.dados).length-1))}catch(e){}ls.set('entrega_tels',JSON.stringify(listaTels().filter(x=>x.tid!==tel.tid)));telaInicio();return}
+  if(a==='telRecarrega'){try{await telAbre(tel.tid)}catch(e){toast('⚠️ Sem conexão')}return}
   if(a==='telComecar'){telComecar();return}
   if(a==='telPular'){const o=telOrdem(tel.dados),v=telDaVez(tel.dados);if(!o||!v)return;
     try{const nova=o.filter(u=>u!==v),fimJa=elosDe(tel.dados).length>=nova.length;await fb.api.telInfo(tel.tid,fimJa?{ordem:nova,fim:true}:{ordem:nova});await fb.api.telSoltaVez(tel.tid).catch(()=>{});toast('⏭️ Vez pulada')}catch(e){toast('⚠️ Não consegui pular')}return}
@@ -86,7 +93,9 @@ async function telAbre(tid,nova){
     else if(d&&d.info&&d.info.criador===fb.uid&&telEstado(d)==='espera'&&d.info.publico&&tel.publicado!==tid){tel.publicado=tid;lobbyPublicaTel(tid,{nome:d.info.nome,max:d.info.max,tema:d.info.tema,dentro:telJogadores(d).length},true)}
     if(d&&telEstado(d)==='jogando'&&telDaVez(d)===fb.uid&&!tel.minhaVezAvisada&&!elosDe(d).some(e=>e.de===fb.uid)){tel.minhaVezAvisada=true;sfx('alarme');toast('🎮 É A SUA VEZ!');if(document.hidden)document.title='🎮 Sua vez! — ENTREGA!'}
     if(d&&d.info&&telFim(d)&&d.info.criador===fb.uid)fb.api.lobbyTirar('t-'+tid).catch(()=>{});
-    if(d&&d.info)salvaTel(tid,{titulo:'Roda de '+d.info.nome,criei:d.info.criador===fb.uid?1:0});
+    if(d&&d.info){const o=telOrdem(d),js=telJogadores(d);
+      salvaTel(tid,{titulo:'Roda de '+d.info.nome,criei:d.info.criador===fb.uid?1:0,entrei:js.some(j=>j.uid===fb.uid)?1:0,
+        estado:telFim(d)?'fim':telEstado(d),feitos:elosDe(d).length,total:o?o.length:d.info.max,dentro:js.length,max:d.info.max,tema:d.info.tema,t:d.info.t||Date.now(),vista:Date.now()})}
     if(tel.tela==='lobby')telLobby()});
 }
 async function telComecar(){const d=tel.dados;if(!d||!d.info||d.info.criador!==fb.uid||telEstado(d)!=='espera'||tel.comecando)return;
@@ -145,7 +154,7 @@ function telLobby(){
   else if(vez)corpo=`<p>🎮 <b>${esc(vez.nome)}</b> está jogando agora. Espere a vez dele terminar…</p>`;
   else corpo=`<p>A frase chegou até aqui depois de ${el.length} pessoa${el.length>1?'s':''}. Agora é você!</p><button data-a="telVez">🎮 JOGAR MINHA VEZ</button>`;
   if(!fim&&criador&&el.length>=2)corpo+='<button class="rosa" data-a="telRevelarJa">🎬 ENCERRAR E REVELAR AGORA</button>';
-  painel(`${topo}${lista}${corpo}<button class="sec" data-a="menu">MENU</button>`);
+  painel(`${topo}${lista}${corpo}<div class="linha"><div><button class="sec" data-a="telRecarrega">🔄 ATUALIZAR</button></div><div><button class="sec" data-a="menu">MENU</button></div></div>`);
 }
 function telaReescrever(){
   tel.tela='reescrever';

@@ -157,7 +157,7 @@ T = [
  ('<label>A frase que começa tudo</label>', '<label>The sentence that starts it all</label>'),
  ('📞 CRIAR RODA</button>', '📞 CREATE ROUND</button>'),
  ("'<label>Suas rodas</label>", "'<label>Your rounds</label>"),
- ("${esc(t.titulo||'Roda')}<small>${t.criei?'você criou':'você participou'}</small>", "${esc(t.titulo||'Round')}<small>${t.criei?'you created':'you played'}</small>"),
+ ("${esc(t.titulo||'Roda')}<small>", "${esc(t.titulo||'Round')}<small>"),
  ("toast('Roda removida da lista')", "toast('Round removed from list')"),
  ("return erro('Escreva uma frase um pouco maior.');\n    erro('Criando…');", "return erro('Write a slightly longer sentence.');\n    erro('Creating…');"),
  ("salvaTel(tid,{titulo:'Roda de '+nome,criei:1})", "salvaTel(tid,{titulo:nome+\"'s round\",criei:1})"),
@@ -389,6 +389,12 @@ T = [
  # ---------- música ----------
  ("const NOMES_MUSICA={arquivo:'🎵 Música: Assobio, Trap e Phonk',lofi:'🎵 Música: Lo-fi',off:'🎵 Música desligada (efeitos continuam)'};", "const NOMES_MUSICA={arquivo:'🎵 Music: Whistle, Trap and Phonk',lofi:'🎵 Music: Lo-fi',off:'🎵 Music off (sound effects stay on)'};"),
  ("const PASTA_AUDIO='audio/';", "const PASTA_AUDIO='../audio/';"),
+ ("const ARQ_VERSAO='version.json';", "const ARQ_VERSAO='../version.json';"),
+ ("b.textContent='✨ Nova versão do jogo! Toque aqui pra atualizar'", "b.textContent='✨ New game version! Tap here to update'"),
+ ("<button class=\"sec\" data-a=\"telRecarrega\">🔄 ATUALIZAR</button>", "<button class=\"sec\" data-a=\"telRecarrega\">🔄 REFRESH</button>"),
+ ("toast('⚠️ Sem conexão')", "toast('⚠️ No connection')"),
+ ("const st=t.estado==='fim'?'🏁 acabou':t.estado==='espera'?`⏳ esperando ${t.dentro||'?'}/${t.max||'?'}`:t.estado==='jogando'?`🎮 jogando ${t.feitos||0}/${t.total||'?'}`:'';", "const st=t.estado==='fim'?'🏁 ended':t.estado==='espera'?`⏳ waiting ${t.dentro||'?'}/${t.max||'?'}`:t.estado==='jogando'?`🎮 playing ${t.feitos||0}/${t.total||'?'}`:'';"),
+ ("t.criei?'você criou':t.entrei?'você entrou':'você viu'", "t.criei?'you created':t.entrei?'you joined':'you viewed'"),
  ('title="Música">🎵</button>', 'title="Music">🎵</button>'),
  # ---------- pular a própria vez ----------
  ("painel(`<div class=\"grande\">⏭️</div><h2>Pular sua vez?</h2><p>A frase passa pra próxima pessoa do jeito que chegou até você. Você não joga nesta roda.</p>", "painel(`<div class=\"grande\">⏭️</div><h2>Skip your turn?</h2><p>The sentence goes to the next person exactly as it reached you. You will not play in this round.</p>"),
