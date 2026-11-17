@@ -33,42 +33,53 @@ function sfx(nome,arg){
     case 'clique':tom(d,t,mf(90),.04,'square',.05);break;
   }
 }
-// ---- música gerada: suave, com timbres arredondados e frases longas ----
-// 8 compassos por ciclo; melodia em escala pentatônica (nunca desafina com o acorde)
+// ---- música lo-fi gerada: piano elétrico, batida com balanço e chiado de vinil ----
+// acordes com sétima/nona; melodia pentatônica esparsa; 8 compassos por ciclo
 const MUSICAS={
-  menu:{bpm:76,raiz:57,acordes:[[0,'m'],[-4,'M'],[3,'M'],[-2,'M'],[0,'m'],[5,'m'],[-4,'M'],[-2,'M']],estilo:'calmo',sem:7,dens:.35},
-  fase:{bpm:104,raiz:60,acordes:[[0,'M'],[-3,'m'],[5,'M'],[7,'M'],[0,'M'],[4,'m'],[5,'M'],[7,'M']],estilo:'leve',sem:3,dens:.5},
-  chefe:{bpm:118,raiz:57,acordes:[[0,'m'],[-4,'M'],[-2,'M'],[0,'m'],[0,'m'],[-4,'M'],[-5,'M'],[-2,'M']],estilo:'tenso',sem:11,dens:.55},
-  reveal:{bpm:96,raiz:62,acordes:[[0,'M'],[-3,'m'],[5,'M'],[7,'M'],[0,'M'],[-3,'m'],[5,'M'],[7,'M']],estilo:'leve',sem:5,dens:.45}};
+  menu:{bpm:72,raiz:53,acordes:[[0,'M7'],[2,'m7'],[4,'m7'],[5,'M7'],[0,'M7'],[-3,'m7'],[2,'m7'],[7,'7']],bat:'nenhuma',sem:7,dens:.25},
+  fase:{bpm:80,raiz:55,acordes:[[2,'m7'],[7,'7'],[0,'M7'],[-3,'m7'],[2,'m7'],[7,'7'],[0,'M7'],[0,'M7']],bat:'lofi',sem:3,dens:.35},
+  chefe:{bpm:86,raiz:52,acordes:[[0,'m7'],[5,'m7'],[-4,'M7'],[-5,'7'],[0,'m7'],[5,'m7'],[-2,'7'],[-5,'7']],bat:'lofi+',sem:11,dens:.4},
+  reveal:{bpm:78,raiz:57,acordes:[[0,'M7'],[-3,'m7'],[5,'M7'],[7,'7'],[0,'M7'],[-3,'m7'],[2,'m7'],[7,'7']],bat:'lofi',sem:5,dens:.3}};
+const ACORDES={M7:[0,4,7,11,14],m7:[0,3,7,10,14],'7':[0,4,7,10,14]};
 function rngSem(s){return()=>{s=(s*9301+49297)%233280;return s/233280}}
-function triade(q){return q==='m'?[0,3,7]:[0,4,7]}
-function pentaDe(q){return q==='m'?[0,3,5,7,10]:[0,2,4,7,9]}
-function preparaMelodia(cfg){if(cfg.mel)return;const r=rngSem(cfg.sem);cfg.mel=[];let grau=2;
-  for(let b=0;b<8;b++)for(let p=0;p<4;p++){                // uma nota por tempo, no máximo
-    const toca=r()<cfg.dens&&!(b%4===3&&p===3);            // respiro no fim de cada frase
-    grau=Math.max(0,Math.min(7,grau+[-1,0,1,1,-1,2,-2][Math.floor(r()*7)]));
-    cfg.mel.push(toca?{g:grau,longa:r()<.35}:null)}}
-function notaSuave(dest,t,f,dur,vol,tipo='sine'){            // ataque e saída lentos: sem "bip"
-  const c=AU.ctx,o=c.createOscillator(),g=c.createGain(),fl=c.createBiquadFilter();
-  o.type=tipo;o.frequency.setValueAtTime(f,t);fl.type='lowpass';fl.frequency.value=1800;
-  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+Math.min(.06,dur*.3));g.gain.setTargetAtTime(0,t+dur*.6,dur*.25);
-  o.connect(fl);fl.connect(g);g.connect(dest);o.start(t);o.stop(t+dur*1.6+.05)}
-const VOL_MUSICA=.12;
+function pentaDe(q){return q==='m7'?[0,3,5,7,10]:[0,2,4,7,9]}
+function preparaMelodia(cfg){if(cfg.mel)return;const r=rngSem(cfg.sem);cfg.mel=[];let grau=4;
+  for(let b=0;b<8;b++)for(let p=0;p<8;p++){                 // grade de colcheias
+    const toca=(p%2===0?r()<cfg.dens:r()<cfg.dens*.35)&&!(b%4===3&&p>=4);
+    grau=Math.max(2,Math.min(9,grau+[-1,0,1,-2,2,-1,1][Math.floor(r()*7)]));
+    cfg.mel.push(toca?{g:grau,longa:r()<.3}:null)}}
+function epiano(dest,t,f,dur,vol){                          // piano elétrico abafado
+  const c=AU.ctx,g=c.createGain(),fl=c.createBiquadFilter();fl.type='lowpass';fl.frequency.value=1250;fl.Q.value=.3;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.012);g.gain.setTargetAtTime(vol*.35,t+.03,.25);g.gain.setTargetAtTime(0,t+dur,.18);
+  for(const [m,v,tp] of [[1,1,'sine'],[2,.18,'sine'],[3.99,.05,'triangle']]){const o=c.createOscillator(),gg=c.createGain();o.type=tp;o.frequency.setValueAtTime(f*m,t);o.detune.value=(Math.random()-.5)*8;gg.gain.value=v;o.connect(gg);gg.connect(fl);o.start(t);o.stop(t+dur+1)}
+  fl.connect(g);g.connect(dest)}
+function baixoLofi(dest,t,f,dur,vol){const c=AU.ctx,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(f,t);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.02);g.gain.setTargetAtTime(0,t+dur*.7,dur*.2);o.connect(g);g.connect(dest);o.start(t);o.stop(t+dur+.4)}
+function bumboLofi(dest,t,vol){tom(dest,t,110,.22,'sine',vol,45,.003);ruido(dest,t,.02,vol*.15,900,'lowpass')}
+function caixaLofi(dest,t,vol){ruido(dest,t,.16,vol,1800,'bandpass');tom(dest,t,190,.08,'triangle',vol*.3,150)}
+function chimbalLofi(dest,t,vol){ruido(dest,t,.035,vol,6500,'highpass')}
+const VOL_MUSICA=.045;
 function tocaPasso(cfg,passo,t,dest,vol=1){
-  vol*=VOL_MUSICA;preparaMelodia(cfg);const sp=60/cfg.bpm/4,bar=Math.floor(passo/16)%8,s=passo%16,[off,q]=cfg.acordes[bar],raiz=cfg.raiz+off,tri=triade(q),pen=pentaDe(q),bat=60/cfg.bpm;
-  // acorde de fundo (pad), um por compasso
-  if(s===0)tri.forEach((iv,k)=>notaSuave(dest,t+k*.012,mf(raiz+iv),bat*3.8,.028*vol,'triangle'));
-  // baixo macio
-  if(s===0||(cfg.estilo!=='calmo'&&s===8))notaSuave(dest,t,mf(raiz-12),bat*1.8,.12*vol,'sine');
-  // arpejo leve, só a cada tempo e uma oitava abaixo do antigo
-  if(cfg.estilo!=='calmo'&&s%4===2)notaSuave(dest,t,mf(raiz+[0,7,12,7][(s/4|0)%4]+tri[(bar+(s>>2))%3]-tri[0]),bat*.8,.03*vol,'triangle');
-  // melodia
-  if(s%4===0){const n=cfg.mel[bar*4+s/4];if(n){const oit=Math.floor(n.g/5),nota=raiz+12+pen[n.g%5]+12*oit;
-    notaSuave(dest,t,mf(nota),bat*(n.longa?1.8:.9),(cfg.estilo==='tenso'?.045:.05)*vol,cfg.estilo==='tenso'?'triangle':'sine')}}
-  // percussão discreta
-  if(cfg.estilo==='leve'&&(s===0||s===8))bumbo(dest,t,.16*vol/VOL_MUSICA*.35);
-  if(cfg.estilo==='tenso'&&s%4===0)bumbo(dest,t,.2*vol/VOL_MUSICA*.35);
-  if(cfg.estilo!=='calmo'&&s%8===4)ruido(dest,t,.06,.03*vol/VOL_MUSICA*.35,5000,'highpass');
+  vol*=VOL_MUSICA;preparaMelodia(cfg);
+  const sp=60/cfg.bpm/4,bar=Math.floor(passo/16)%8,s=passo%16,[off,q]=cfg.acordes[bar],raiz=cfg.raiz+off,ac=ACORDES[q],pen=pentaDe(q),bat=60/cfg.bpm;
+  const sw=(s%4===2)?sp*.32:0,tt=t+sw;                     // balanço (swing) nas colcheias
+  // piano: acorde no tempo 1 e "e do 2", com leve dedilhado
+  if(s===0||s===6){const voz=s===0?ac.slice(0,4):[ac[1],ac[2],ac[4]];voz.forEach((iv,k)=>epiano(dest,tt+k*.018,mf(raiz+12+iv),s===0?bat*1.4:bat*2.2,(s===0?.06:.045)*vol/ VOL_MUSICA*VOL_MUSICA))}
+  // baixo sincopado
+  if(s===0)baixoLofi(dest,t,mf(raiz-12),bat*1.5,.14*vol);
+  if(s===10&&cfg.bat!=='nenhuma')baixoLofi(dest,tt,mf(raiz-12+(bar%2?7:0)),bat*.9,.1*vol);
+  // melodia esparsa
+  if(s%2===0){const n=cfg.mel[bar*8+s/2];if(n){const oit=Math.floor(n.g/5),nota=raiz+12+pen[n.g%5]+12*(oit-1)+12;
+    epiano(dest,tt+.01,mf(nota),bat*(n.longa?1.6:.7),.05*vol)}}
+  // bateria lo-fi
+  if(cfg.bat!=='nenhuma'){const k=vol/VOL_MUSICA*.35;
+    if(s===0||s===10)bumboLofi(dest,tt,.45*k);
+    if(s===4||s===12)caixaLofi(dest,tt,.16*k);
+    if(s%2===0)chimbalLofi(dest,tt,(s%4===0?.05:.03)*k);
+    if(cfg.bat==='lofi+'&&s===14)bumboLofi(dest,tt,.3*k)}
+  // chiado de vinil
+  if(Math.random()<.35)ruido(dest,t+Math.random()*sp,.004,(.02+Math.random()*.03)*vol/VOL_MUSICA*.35,3000,'highpass');
+  if(s===0)ruido(dest,t,bat*4,.006*vol/VOL_MUSICA*.35,2500,'bandpass');
 }
 function musica(nome){
   if(!AU.musicaOn)nome=null;
