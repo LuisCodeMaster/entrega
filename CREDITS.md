@@ -6,6 +6,19 @@
 - Licença: Pixabay Content License (https://pixabay.com/service/license-summary/)
 - Uso: música de fundo do menu e das fases, dentro do jogo. O arquivo foi convertido para 96 kbps para carregar mais rápido.
 - Observação: a faixa tem registro no Content ID do YouTube. Por isso, o vídeo da revelação gerado pelo jogo usa a música composta pelo próprio jogo, e não esta faixa.
-- Este arquivo faz parte do jogo e não pode ser baixado ou redistribuído separadamente.
+
+**"Powerful Beat Trap (loop)"**, de **AleXZavesa**
+- Fonte: https://pixabay.com/music/trap-powerful-beat-trap-loop-635537/
+- Licença: Pixabay Content License
+- Uso: música das fases. Convertida para 96 kbps, com graves levemente reduzidos para soar melhor em alto-falante de celular.
+- Observação: registrada no Content ID do YouTube.
+
+**"Phonk House (Short Version)"**, de **AleXZavesa**
+- Fonte: https://pixabay.com/music/phonk-phonk-house-short-version-635517/
+- Licença: Pixabay Content License
+- Uso: música dos chefes. Recortada em um trecho de 35 s que repete sem emenda, convertida para 96 kbps e com graves levemente reduzidos.
+- Observação: registrada no Content ID do YouTube.
+
+Estes arquivos fazem parte do jogo e não podem ser baixados ou redistribuídos separadamente.
 
 Todas as outras músicas e efeitos sonoros são gerados pelo próprio jogo (código em `js/07-som.js`).
