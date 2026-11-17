@@ -40,7 +40,7 @@ async function telAcao(a,n){
     erro('Creating…');
     try{await fb.iniciar();const tid=novoCid();
       ls.set('entrega_telfrase_'+tid,f);
-      await fb.api.telCriar(tid,{criador:fb.uid,nome,max:telMax,tema:telTema,estado:'espera',t:Date.now()});await fb.api.telEntrar(tid,nome);await lobbyPublicaTel(tid,{nome,max:telMax,tema:telTema});
+      await fb.api.telCriar(tid,{criador:fb.uid,nome,max:telMax,tema:telTema,estado:'espera',publico:lobbyPublico,t:Date.now()});await fb.api.telEntrar(tid,nome);tel.publicado=tid;await lobbyPublicaTel(tid,{nome,max:telMax,tema:telTema});
       salvaTel(tid,{titulo:nome+"'s round",criei:1});await telAbre(tid,true);
     }catch(e){erro('Could not create the round. Check your internet.')}
     return}
@@ -73,10 +73,11 @@ async function telAcao(a,n){
 async function telAbre(tid,nova){
   if(location.hash)history.replaceState(null,'',location.pathname);
   if(tel.desliga){try{tel.desliga()}catch(e){}}
-  tel.tid=tid;tel.dados=null;tel.tela='lobby';
+  tel.publicado=nova?tid:null;tel.tid=tid;tel.dados=null;tel.tela='lobby';
   painel('<p>Loading round…</p>');tel.minhaVezAvisada=false;
   tel.desliga=fb.api.telOuvir(tid,d=>{tel.dados=d;
     if(d&&d.info&&d.info.criador===fb.uid&&telEstado(d)==='espera'&&telJogadores(d).length>=d.info.max)telComecar();
+    else if(d&&d.info&&d.info.criador===fb.uid&&telEstado(d)==='espera'&&d.info.publico&&tel.publicado!==tid){tel.publicado=tid;lobbyPublicaTel(tid,{nome:d.info.nome,max:d.info.max,tema:d.info.tema,dentro:telJogadores(d).length},true)}
     if(d&&telEstado(d)==='jogando'&&telDaVez(d)===fb.uid&&!tel.minhaVezAvisada&&!elosDe(d).some(e=>e.de===fb.uid)){tel.minhaVezAvisada=true;sfx('alarme');toast('🎮 IT IS YOUR TURN!');if(document.hidden)document.title='🎮 Your turn! — ENTREGA!'}
     if(d&&d.info&&telFim(d)&&d.info.criador===fb.uid)fb.api.lobbyTirar('t-'+tid).catch(()=>{});
     if(d&&d.info)salvaTel(tid,{titulo:d.info.nome+"'s round",criei:d.info.criador===fb.uid?1:0});
