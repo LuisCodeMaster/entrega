@@ -6,6 +6,7 @@ function elosDe(d){return Object.entries((d&&d.elos)||{}).sort((a,b)=>a[0]<b[0]?
 function telOrdem(d){const o=d&&d.info&&d.info.ordem;return o?Object.keys(o).sort((a,b)=>a-b).map(k=>o[k]):null}
 function telEstado(d){return (d&&d.info&&d.info.estado)||'jogando'}
 function telJogadores(d){return Object.entries((d&&d.jogadores)||{}).map(([uid,v])=>({uid,nome:limpaTexto(v.nome||'?'),t:v.t||0})).sort((a,b)=>a.t-b.t)}
+function elosReais(d){return elosDe(d).filter(e=>!e.pulou)}
 function telFim(d){if(!d||!d.info)return false;if(d.info.fim)return true;const o=telOrdem(d);return elosDe(d).length>=(o?o.length:d.info.max)}
 function telDaVez(d){const o=telOrdem(d);return o?o[elosDe(d).length]||null:null}
 const chaveElo=i=>'e'+String(i).padStart(2,'0');
@@ -50,7 +51,7 @@ async function telAcao(a,n){
     if(telOrdem(d)&&telDaVez(d)!==fb.uid){toast('It is not your turn yet!');return telLobby()}
     const ok=await fb.api.telVez(tel.tid,ls.get('entrega_nome','Jogador')).catch(()=>false);
     if(!ok){toast('Someone took the turn before you!');return telLobby()}
-    const el=elosDe(d);tel.prev=el.length?el[el.length-1].vis:'';
+    const el=elosReais(d);tel.prev=el.length?el[el.length-1].vis:'';
     if(!el.length){const f=ls.get('entrega_telfrase_'+tel.tid,'');if(f)return escolheCanal(f,()=>telJoga(f),async()=>{await fb.api.telSoltaVez(tel.tid).catch(()=>{});telLobby()});return telaPrimeiraFrase()}
     telaReescrever();return}
   if(a==='telPrimeira'){const f=limpaEntrada($('telTexto').value.trim());if(f.replace(/\s/g,'').length<4)return erro('Escreva uma frase um pouco maior.');ls.set('entrega_telfrase_'+tel.tid,f);escolheCanal(f,()=>telJoga(f),()=>telaPrimeiraFrase());return}
@@ -61,7 +62,12 @@ async function telAcao(a,n){
   if(a==='telPular'){const o=telOrdem(tel.dados),v=telDaVez(tel.dados);if(!o||!v)return;
     try{const nova=o.filter(u=>u!==v),fimJa=elosDe(tel.dados).length>=nova.length;await fb.api.telInfo(tel.tid,fimJa?{ordem:nova,fim:true}:{ordem:nova});await fb.api.telSoltaVez(tel.tid).catch(()=>{});toast('⏭️ Turn skipped')}catch(e){toast('⚠️ Could not skip')}return}
   if(a==='telEntregar'){const t=limpaEntrada($('telTexto').value.trim());if(t.replace(/\s/g,'').length<2)return erro('Write what you understood.');escolheCanal(t,()=>telJoga(t),()=>{telaReescrever();$('telTexto').value=t});return}
-  if(a==='telDesiste'){await fb.api.telSoltaVez(tel.tid).catch(()=>{});telLobby();return}
+  if(a==='telVolta'){await fb.api.telSoltaVez(tel.tid).catch(()=>{});telLobby();return}
+  if(a==='telDesiste'){if(!telOrdem(tel.dados)){await fb.api.telSoltaVez(tel.tid).catch(()=>{});return telLobby()}
+    tel.tela='confirma';painel(`<div class="grande">⏭️</div><h2>Skip your turn?</h2><p>The sentence goes to the next person exactly as it reached you. You will not play in this round.</p>
+      <button class="rosa" data-a="telPularEu">⏭️ YES, SKIP MY TURN</button><button class="sec" data-a="telVoltaVez">NO, I WANT TO PLAY</button>`);return}
+  if(a==='telVoltaVez'){const el=elosReais(tel.dados);tel.prev=el.length?el[el.length-1].vis:'';return el.length?telaReescrever():telaPrimeiraFrase()}
+  if(a==='telPularEu'){await telPularEu();return}
   if(a==='telDeNovo'){telJoga(tel.meuTxt);return}
   if(a==='telRevelarJa'){try{await fb.api.telEncerra(tel.tid);fb.api.lobbyTirar('t-'+tel.tid).catch(()=>{})}catch(e){toast('⚠️ Could not end the round')}return}
   if(a==='telLobby'){parReveal();telLobby();return}
@@ -89,7 +95,17 @@ async function telComecar(){const d=tel.dados;if(!d||!d.info||d.info.criador!==f
 function telaPrimeiraFrase(){tel.tela='primeira';const tm=temaDe(tel.dados.info.tema);
   painel(`<div class="grande">✍️</div><p style="font-size:14px;margin:0">Tema: ${tm.e} ${esc(tm.n)}</p><h2>Write the sentence that starts it all</h2>
     <input id="telTexto" maxlength="60" placeholder="${esc(tm.ex[0])}"><div class="erro" id="erro"></div>
-    <button data-a="telPrimeira">DELIVER ➤</button><button class="sec" data-a="telDesiste">BACK</button>`)}
+    <button data-a="telPrimeira">DELIVER ➤</button><button class="sec" data-a="telDesiste">SKIP MY TURN</button>`)}
+async function telPularEu(){
+  const d=tel.dados,el=elosDe(d),i=el.length;
+  if(telFim(d)||el.some(e=>e.de===fb.uid)||(telOrdem(d)&&telDaVez(d)!==fb.uid))return telLobby();
+  const reais=elosReais(d),prev=(reais.length?reais[reais.length-1].vis:'').slice(0,80);
+  try{await fb.api.telElo(tel.tid,chaveElo(i),{de:fb.uid,nome:ls.get('entrega_nome','Jogador').slice(0,12),pulou:true,recebeu:prev,txt:prev,vis:prev,pct:100,t:Date.now()});
+    await fb.api.telSoltaVez(tel.tid).catch(()=>{});
+    const total=(telOrdem(d)||[]).length||d.info.max;if(i+1>=total)await fb.api.telEncerra(tel.tid).catch(()=>{});
+    toast('⏭️ You skipped your turn');telLobby()}
+  catch(e){toast('⚠️ Could not skip')}
+}
 function telShareTxt(){const d=tel.dados;if(telEstado(d)==='espera'){const f=d.info.max-telJogadores(d).length;
     return `📞 Broken Telephone on ENTREGA! Each person delivers the sentence by playing and at the end we see how it arrived 😂\n${f} more ${f>1?'people':'person'} needed to start. Join the round:\n${SITE}#t-${tel.tid}`}
   const f=d.info.max-elosDe(d).length;
@@ -113,13 +129,14 @@ function telLobby(){
   const el=elosDe(d),fim=telFim(d),joguei=el.some(e=>e.de===eu),ordem=telOrdem(d);
   let lista='',corpo='';
   if(ordem){const nomes=Object.fromEntries(js.map(j=>[j.uid,j.nome]));el.forEach(e=>{nomes[e.de]=e.nome});
-    lista='<div class="vagas">'+ordem.map((u,i)=>{const feito=i<el.length,agora=i===el.length&&!fim;
-      return `<div class="vaga ${feito?'ok':''} ${agora?'agora':''}">${feito?'✅':agora?'🎮':'⏳'} ${i+1}. ${esc(nomes[u]||'?')}${u===eu?' (you)':''}</div>`}).join('')+'</div>'}
+    lista='<div class="vagas">'+ordem.map((u,i)=>{const feito=i<el.length,pulou=feito&&el[i].pulou,agora=i===el.length&&!fim;
+      return `<div class="vaga ${feito?'ok':''} ${agora?'agora':''}">${pulou?'⏭️':feito?'✅':agora?'🎮':'⏳'} ${i+1}. ${esc(nomes[u]||'?')}${u===eu?' (you)':''}${pulou?' · skipped':''}</div>`}).join('')+'</div>'}
   else{const bolinhas=Array.from({length:max},(_,i)=>`<span class="${i<el.length?'feita':''}">${i<el.length?'✉️':'·'}</span>`).join('');
     lista=`<div class="rota">${bolinhas}</div><p style="font-size:14px">${el.length}/${max} deliveries</p>`}
   const vezUid=telDaVez(d),vezNome=vezUid?(js.find(j=>j.uid===vezUid)||{}).nome:null;
   const vez=d.vez&&d.vez.ate>Date.now()&&d.vez.uid!==eu?d.vez:null;
-  if(fim)corpo=`<p>The round is over! See how the sentence changed from person to person 👇</p><button data-a="telReveal">🎬 SEE THE REVEAL</button>`;
+  if(fim&&!elosReais(d).length)corpo='<p>The round ended with no deliveries. 😅</p>';
+  else if(fim)corpo=`<p>The round is over! See how the sentence changed from person to person 👇</p><button data-a="telReveal">🎬 SEE THE REVEAL</button>`;
   else if(ordem&&vezUid===eu)corpo=`<p class="ok"><b>🎮 IT IS YOUR TURN!</b></p><button data-a="telVez">🎮 PLAY MY TURN</button>${criador?'<button class="sec" data-a="telPular">⏭️ SKIP MY TURN</button>':''}`;
   else if(ordem)corpo=`<p>${joguei?'✅ You already played. ':''}Now it is <b>${esc(vezNome||'?')}</b>'s turn…</p>
     ${criador?`<button class="sec" data-a="telPular">⏭️ SKIP ${esc((vezNome||'').toUpperCase())}</button>`:''}`;
@@ -270,7 +287,7 @@ function agendaNarracao(el){
   const F=T_INTRO+el.length*T_ELO;revFalas.push(setTimeout(()=>falar('It started as: '+el[0].txt,1.15),(F-.1)*1000));
   revFalas.push(setTimeout(()=>falar('It ended as: '+el[el.length-1].vis,.95),(F+1.6)*1000))}
 function telaRevelacao(){
-  tel.tela='reveal';const el=elosDe(tel.dados);if(!el.length)return telLobby();
+  tel.tela='reveal';const el=elosReais(tel.dados);if(!el.length)return telLobby();
   painel(`<canvas id="revCv" width="${VW}" height="${VH}" style="width:100%;max-width:300px;aspect-ratio:9/16;border-radius:16px;display:block;margin:0 auto 8px"></canvas>
     <div id="revBtns"><button data-a="telVideo">🎬 MAKE VIDEO FOR SHORTS</button></div>
     <button class="rosa" data-a="telMural">📊 POST TO THE WALL</button>
@@ -290,7 +307,7 @@ async function gravaVideo(){
   if(gravando)return;const tp=tipoVideo();
   const cvTest=document.createElement('canvas');
   if(tp==null||!cvTest.captureStream)return erro('Your browser cannot record video. Use your phone\'s screen recording while the reveal plays.');
-  const el=elosDe(tel.dados),dur=duracaoRev(el),c=document.createElement('canvas');c.width=VW;c.height=VH;const g=c.getContext('2d');
+  const el=elosReais(tel.dados),dur=duracaoRev(el),c=document.createElement('canvas');c.width=VW;c.height=VH;const g=c.getContext('2d');
   parReveal();auInit();let stream=c.captureStream(30),somG=null;
   if(AU.ctx&&AU.ctx.createMediaStreamDestination){if(AU.ctx.state==='suspended')await AU.ctx.resume();
     const dst=AU.ctx.createMediaStreamDestination();somG=AU.ctx.createGain();somG.connect(dst);if(!AU.mudo)somG.connect(AU.master);

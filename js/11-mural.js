@@ -3,7 +3,7 @@ let muralAba='top',muralCache=[],muralAdmin=false,_admin=null;
 async function souAdmin(){if(_admin!==null)return _admin;try{await fb.iniciar();_admin=await fb.api.souAdmin()}catch(e){_admin=false}return _admin}
 function escondidosMural(){try{return JSON.parse(ls.get('entrega_mural_esc','{}'))}catch(e){return{}}}
 async function publicaMural(){
-  const d=tel.dados,el=elosDe(d);if(el.length<2)return toast('Precisa de pelo menos 2 entregas');
+  const d=tel.dados,el=elosReais(d);if(el.length<2)return toast('Precisa de pelo menos 2 entregas');
   try{await fb.api.muralPublicar(tel.tid,{de:fb.uid,nome:ls.get('entrega_nome','Jogador').slice(0,12),tema:(d.info&&d.info.tema)||'livre',
       inicio:el[0].txt.slice(0,80),fim:el[el.length-1].vis.slice(0,80),nomes:el.map(e=>e.nome).join(', ').slice(0,120),n:el.length,t:Date.now()});
     toast('📊 Publicado no mural!');const b=document.querySelector('[data-a="telMural"]');if(b){b.textContent='✅ NO MURAL';b.disabled=true}}

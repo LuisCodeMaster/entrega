@@ -386,6 +386,13 @@ T = [
  ("celular(sx,H/2,dados.de||'Você','#5cf0a8')", "celular(sx,H/2,dados.de||'You','#5cf0a8')"),
  ("celular(W+80-(W*0.2+80)*k,H/2,dados.para||'Destino','#ff9ad5')", "celular(W+80-(W*0.2+80)*k,H/2,dados.para||'Destination','#ff9ad5')"),
  ("J=novaJornada(ls.get('entrega_nome','Eu'),ch.outro||'Amigo',txt,'ida');", "J=novaJornada(ls.get('entrega_nome','Me'),ch.outro||'Friend',txt,'ida');"),
+ # ---------- pular a própria vez ----------
+ ("painel(`<div class=\"grande\">⏭️</div><h2>Pular sua vez?</h2><p>A frase passa pra próxima pessoa do jeito que chegou até você. Você não joga nesta roda.</p>", "painel(`<div class=\"grande\">⏭️</div><h2>Skip your turn?</h2><p>The sentence goes to the next person exactly as it reached you. You will not play in this round.</p>"),
+ ('<button class="rosa" data-a="telPularEu">⏭️ SIM, PULAR MINHA VEZ</button><button class="sec" data-a="telVoltaVez">NÃO, QUERO JOGAR</button>', '<button class="rosa" data-a="telPularEu">⏭️ YES, SKIP MY TURN</button><button class="sec" data-a="telVoltaVez">NO, I WANT TO PLAY</button>'),
+ ('<button data-a="telPrimeira">ENTREGAR ➤</button><button class="sec" data-a="telDesiste">PULAR MINHA VEZ</button>', '<button data-a="telPrimeira">DELIVER ➤</button><button class="sec" data-a="telDesiste">SKIP MY TURN</button>'),
+ ("toast('⏭️ Você pulou sua vez')", "toast('⏭️ You skipped your turn')"),
+ ("${pulou?' · pulou':''}", "${pulou?' · skipped':''}"),
+ ("if(fim&&!elosReais(d).length)corpo='<p>A roda acabou sem nenhuma entrega. 😅</p>';", "if(fim&&!elosReais(d).length)corpo='<p>The round ended with no deliveries. 😅</p>';"),
  # ---------- sala de espera ----------
  ("${criador?'<button class=\"sec\" data-a=\"telPular\">⏭️ PULAR MINHA VEZ</button>':''}", "${criador?'<button class=\"sec\" data-a=\"telPular\">⏭️ SKIP MY TURN</button>':''}"),
  ("toast('Ainda não é sua vez!')", "toast('It is not your turn yet!')"),
@@ -396,8 +403,7 @@ T = [
  ("toast('⚠️ Não consegui começar')", "toast('⚠️ Could not start')"),
  ("toast('🎮 É A SUA VEZ!');if(document.hidden)document.title='🎮 Sua vez! — ENTREGA!'", "toast('🎮 IT IS YOUR TURN!');if(document.hidden)document.title='🎮 Your turn! — ENTREGA!'"),
  ('<h2>Escreva a frase que começa tudo</h2>', '<h2>Write the sentence that starts it all</h2>'),
- ('<button data-a="telPrimeira">ENTREGAR ➤</button><button class="sec" data-a="telDesiste">VOLTAR</button>', '<button data-a="telPrimeira">DELIVER ➤</button><button class="sec" data-a="telDesiste">BACK</button>'),
- ("return `📞 Telefone Sem Fio no ENTREGA! Cada pessoa entrega a frase jogando e no fim a gente vê como ela chegou 😂\\nFalta${f>1?'m':''} ${f} pessoa${f>1?'s':''} pra começar. Entra na roda:\\n${SITE}#t-${tel.tid}`}",
+  ("return `📞 Telefone Sem Fio no ENTREGA! Cada pessoa entrega a frase jogando e no fim a gente vê como ela chegou 😂\\nFalta${f>1?'m':''} ${f} pessoa${f>1?'s':''} pra começar. Entra na roda:\\n${SITE}#t-${tel.tid}`}",
   "return `📞 Broken Telephone on ENTREGA! Each person delivers the sentence by playing and at the end we see how it arrived 😂\\n${f} more ${f>1?'people':'person'} needed to start. Join the round:\\n${SITE}#t-${tel.tid}`}"),
  ("const topo=`<div class=\"grande\">📞</div><h2>Roda de ${esc(d.info.nome)}</h2><p style=\"font-size:14px;margin:0\">Tema: ${tm.e} <b>${esc(tm.n)}</b></p>`;", "const topo=`<div class=\"grande\">📞</div><h2>${esc(d.info.nome)}'s round</h2><p style=\"font-size:14px;margin:0\">Theme: ${tm.e} <b>${esc(tm.n)}</b></p>`;"),
  (":'⏳ vaga livre'}</div>`", ":'⏳ open spot'}</div>`"),
