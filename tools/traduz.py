@@ -387,7 +387,8 @@ T = [
  ("celular(W+80-(W*0.2+80)*k,H/2,dados.para||'Destino','#ff9ad5')", "celular(W+80-(W*0.2+80)*k,H/2,dados.para||'Destination','#ff9ad5')"),
  ("J=novaJornada(ls.get('entrega_nome','Eu'),ch.outro||'Amigo',txt,'ida');", "J=novaJornada(ls.get('entrega_nome','Me'),ch.outro||'Friend',txt,'ida');"),
  # ---------- música ----------
- ("toast(alternaMusica()?'🎵 Música ligada':'🎵 Música desligada (efeitos continuam)')", "toast(alternaMusica()?'🎵 Music on':'🎵 Music off (sound effects stay on)')"),
+ ("const NOMES_MUSICA={arquivo:'🎵 Música: Assobio feliz',lofi:'🎵 Música: Lo-fi',off:'🎵 Música desligada (efeitos continuam)'};", "const NOMES_MUSICA={arquivo:'🎵 Music: Happy whistle',lofi:'🎵 Music: Lo-fi',off:'🎵 Music off (sound effects stay on)'};"),
+ ("const ARQ_MUSICA='audio/upbeat-whistle.mp3'", "const ARQ_MUSICA='../audio/upbeat-whistle.mp3'"),
  ('title="Música">🎵</button>', 'title="Music">🎵</button>'),
  # ---------- pular a própria vez ----------
  ("painel(`<div class=\"grande\">⏭️</div><h2>Pular sua vez?</h2><p>A frase passa pra próxima pessoa do jeito que chegou até você. Você não joga nesta roda.</p>", "painel(`<div class=\"grande\">⏭️</div><h2>Skip your turn?</h2><p>The sentence goes to the next person exactly as it reached you. You will not play in this round.</p>"),

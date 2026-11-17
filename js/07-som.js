@@ -1,14 +1,19 @@
 // ================= SOM (tudo sintetizado na hora, música original gerada) =================
-const AU={ctx:null,master:null,mus:null,sfxG:null,mudo:ls.get('entrega_mudo','0')==='1',musicaOn:ls.get('entrega_musica','1')==='1',faixa:null,timer:null,passo:0,prox:0,cfg:null,musG:null};
+const AU={ctx:null,master:null,mus:null,sfxG:null,mudo:ls.get('entrega_mudo','0')==='1',estiloMusica:['arquivo','lofi','off'].includes(ls.get('entrega_musica_estilo',''))?ls.get('entrega_musica_estilo',''):(ls.get('entrega_musica','1')==='0'?'off':'arquivo'),buf:null,src:null,faixa:null,timer:null,passo:0,prox:0,cfg:null,musG:null};
 function auInit(){
   if(AU.ctx||!(window.AudioContext||window.webkitAudioContext))return;
   try{AU.ctx=new (window.AudioContext||window.webkitAudioContext)();
     AU.master=AU.ctx.createGain();AU.master.gain.value=AU.mudo?0:.7;AU.master.connect(AU.ctx.destination);
     AU.sfxG=AU.ctx.createGain();AU.sfxG.gain.value=.55;AU.sfxG.connect(AU.master);
+    carregaMusicaArquivo();
     AU.ruido=AU.ctx.createBuffer(1,AU.ctx.sampleRate,AU.ctx.sampleRate);const d=AU.ruido.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
   }catch(e){AU.ctx=null}
 }
 ['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,()=>{auInit();if(AU.ctx&&AU.ctx.state==='suspended')AU.ctx.resume()},{capture:true,passive:true}));
+// música em arquivo (Pixabay, ver CREDITS.md). Se não carregar, o jogo usa a música que ele mesmo compõe.
+const ARQ_MUSICA='audio/upbeat-whistle.mp3',GANHO_ARQUIVO=.15;
+async function carregaMusicaArquivo(){if(AU.buf||AU.carregando||!AU.ctx)return;AU.carregando=true;
+  try{const r=await fetch(ARQ_MUSICA);const ab=await r.arrayBuffer();AU.buf=await new Promise((ok,erro)=>AU.ctx.decodeAudioData(ab,ok,erro))}catch(e){AU.buf=null}AU.carregando=false}
 function alternaSom(){AU.mudo=!AU.mudo;ls.set('entrega_mudo',AU.mudo?'1':'0');if(AU.master)AU.master.gain.setTargetAtTime(AU.mudo?0:.7,AU.ctx.currentTime,.05);
   if(window.speechSynthesis&&AU.mudo)speechSynthesis.cancel();const b=$('btnSom');if(b)b.textContent=AU.mudo?'🔇':'🔊';return AU.mudo}
 const mf=m=>440*Math.pow(2,(m-69)/12);
@@ -82,15 +87,19 @@ function tocaPasso(cfg,passo,t,dest,vol=1){
   if(s===0)ruido(dest,t,bat*4,.006*vol/VOL_MUSICA*.35,2500,'bandpass');
 }
 function musica(nome){
-  if(!AU.musicaOn)nome=null;
-  if(!AU.ctx||AU.faixa===nome)return;AU.faixa=nome;
-  if(AU.musG){const g=AU.musG;g.gain.setTargetAtTime(0,AU.ctx.currentTime,.25);setTimeout(()=>g.disconnect(),1500)}
-  clearInterval(AU.timer);AU.musG=null;if(!nome)return;
-  const cfg=MUSICAS[nome],g=AU.ctx.createGain();g.gain.setValueAtTime(0,AU.ctx.currentTime);g.gain.linearRampToValueAtTime(.42,AU.ctx.currentTime+1.2);
-  g.connect(AU.master);AU.musG=g;AU.passo=0;AU.prox=AU.ctx.currentTime+.08;
+  if(AU.estiloMusica==='off')nome=null;
+  const id=(nome&&AU.estiloMusica==='arquivo'&&AU.buf&&(nome==='menu'||nome==='fase'))?'arquivo':nome;
+  if(!AU.ctx||AU.faixa===id)return;AU.faixa=id;
+  if(AU.musG){const g=AU.musG,src=AU.src;g.gain.setTargetAtTime(0,AU.ctx.currentTime,.25);setTimeout(()=>{g.disconnect();if(src)try{src.stop()}catch(e){}},1500)}
+  clearInterval(AU.timer);AU.musG=null;AU.src=null;if(!id)return;
+  const g=AU.ctx.createGain();g.gain.setValueAtTime(0,AU.ctx.currentTime);g.gain.linearRampToValueAtTime(.42,AU.ctx.currentTime+1.2);g.connect(AU.master);AU.musG=g;
+  if(id==='arquivo'){const src=AU.ctx.createBufferSource(),ga=AU.ctx.createGain();src.buffer=AU.buf;src.loop=true;ga.gain.value=GANHO_ARQUIVO/.42;src.connect(ga);ga.connect(g);src.start();AU.src=src;return}
+  const cfg=MUSICAS[id];AU.passo=0;AU.prox=AU.ctx.currentTime+.08;
   AU.timer=setInterval(()=>{const sp=60/cfg.bpm/4;while(AU.prox<AU.ctx.currentTime+.2){tocaPasso(cfg,AU.passo,AU.prox,g);AU.prox+=sp;AU.passo++}},40);
 }
-function alternaMusica(){AU.musicaOn=!AU.musicaOn;ls.set('entrega_musica',AU.musicaOn?'1':'0');if(!AU.musicaOn)musica(null);return AU.musicaOn}
+const NOMES_MUSICA={arquivo:'🎵 Música: Assobio feliz',lofi:'🎵 Música: Lo-fi',off:'🎵 Música desligada (efeitos continuam)'};
+function alternaMusica(){const ordem=['arquivo','lofi','off'];AU.estiloMusica=ordem[(ordem.indexOf(AU.estiloMusica)+1)%3];ls.set('entrega_musica_estilo',AU.estiloMusica);
+  AU.faixa='__troca';if(AU.estiloMusica==='arquivo')carregaMusicaArquivo();return NOMES_MUSICA[AU.estiloMusica]}
 function musicaDesejada(){
   if(tel&&tel.tela==='reveal')return null;
   if(!$('painel').classList.contains('oculta')||ch.aberto||!st||st.estado==='parado')return 'menu';
