@@ -3,7 +3,11 @@ const tel={tid:null,dados:null,desliga:null,tela:null,prev:'',meuTxt:''};
 function listaTels(){try{return JSON.parse(ls.get('entrega_tels','[]'))}catch(e){return[]}}
 function salvaTel(tid,d){const l=listaTels().filter(x=>x.tid!==tid),v=listaTels().find(x=>x.tid===tid)||{};l.unshift({...v,tid,...d});ls.set('entrega_tels',JSON.stringify(l.slice(0,30)))}
 function elosDe(d){return Object.entries((d&&d.elos)||{}).sort((a,b)=>a[0]<b[0]?-1:1).map(([k,v])=>({k,...limpaObj(v,['txt','vis','recebeu','nome'])}))}
-function telFim(d){return !!d&&!!d.info&&(d.info.fim||elosDe(d).length>=d.info.max)}
+function telOrdem(d){const o=d&&d.info&&d.info.ordem;return o?Object.keys(o).sort((a,b)=>a-b).map(k=>o[k]):null}
+function telEstado(d){return (d&&d.info&&d.info.estado)||'jogando'}
+function telJogadores(d){return Object.entries((d&&d.jogadores)||{}).map(([uid,v])=>({uid,nome:limpaTexto(v.nome||'?'),t:v.t||0})).sort((a,b)=>a.t-b.t)}
+function telFim(d){if(!d||!d.info)return false;if(d.info.fim)return true;const o=telOrdem(d);return elosDe(d).length>=(o?o.length:d.info.max)}
+function telDaVez(d){const o=telOrdem(d);return o?o[elosDe(d).length]||null:null}
 const chaveElo=i=>'e'+String(i).padStart(2,'0');
 let telMax=5;
 function htmlTelefone(){
@@ -20,7 +24,7 @@ function htmlTelefone(){
     <div class="linha"><div style="flex:3"><input id="telFrase" maxlength="60" placeholder="${esc(temaDe(telTema).ex[0])}"></div><div><button class="sec" data-a="telSorteia" style="margin:0;height:100%">🎲</button></div></div>
     <div class="erro" id="erro"></div>
     ${htmlPublico()}
-    <button data-a="telCriar" ${hash?'class="sec"':''}>📞 CRIAR RODA E JOGAR</button>
+    <button data-a="telCriar" ${hash?'class="sec"':''}>📞 CRIAR RODA</button>
     ${ls_.length?'<label>Suas rodas</label><div class="convs">'+ls_.map(t=>`<div class="convItem"><button data-a="telAbrir" data-n="${t.tid}"><span>📞 ${esc(t.titulo||'Roda')}<small>${t.criei?'você criou':'você participou'}</small></span></button><button class="lixo" data-a="telLixo" data-n="${t.tid}">🗑️</button></div>`).join('')+'</div>':''}`;
 }
 async function telAcao(a,n){
@@ -35,17 +39,27 @@ async function telAcao(a,n){
     if(f.replace(/\s/g,'').length<4)return erro('Escreva uma frase um pouco maior.');
     erro('Criando…');
     try{await fb.iniciar();const tid=novoCid();
-      await fb.api.telCriar(tid,{criador:fb.uid,nome,max:telMax,tema:telTema,t:Date.now()});await lobbyPublicaTel(tid,{nome,max:telMax,tema:telTema});await fb.api.telEntrar(tid,nome);
+      ls.set('entrega_telfrase_'+tid,f);
+      await fb.api.telCriar(tid,{criador:fb.uid,nome,max:telMax,tema:telTema,estado:'espera',t:Date.now()});await fb.api.telEntrar(tid,nome);await lobbyPublicaTel(tid,{nome,max:telMax,tema:telTema});
       salvaTel(tid,{titulo:'Roda de '+nome,criei:1});await telAbre(tid,true);
-      if(await fb.api.telVez(tid,nome)){tel.prev='';escolheCanal(f,()=>telJoga(f),async()=>{await fb.api.telSoltaVez(tid).catch(()=>{});telLobby()})}
     }catch(e){erro('Não consegui criar a roda. Confira a internet.')}
     return}
   if(a==='telAbrir'){pegaNome();erro('Conectando…');try{await fb.iniciar();await telAbre(n)}catch(e){erro('Não consegui abrir essa roda.')}return}
   if(a==='telVez'){
-    if(telFim(tel.dados)||elosDe(tel.dados).some(e=>e.de===fb.uid))return telLobby();
+    const d=tel.dados;if(telFim(d)||elosDe(d).some(e=>e.de===fb.uid))return telLobby();
+    if(telOrdem(d)&&telDaVez(d)!==fb.uid){toast('Ainda não é sua vez!');return telLobby()}
     const ok=await fb.api.telVez(tel.tid,ls.get('entrega_nome','Jogador')).catch(()=>false);
     if(!ok){toast('Alguém pegou a vez antes de você!');return telLobby()}
-    const el=elosDe(tel.dados);tel.prev=el.length?el[el.length-1].vis:'';telaReescrever();return}
+    const el=elosDe(d);tel.prev=el.length?el[el.length-1].vis:'';
+    if(!el.length){const f=ls.get('entrega_telfrase_'+tel.tid,'');if(f)return escolheCanal(f,()=>telJoga(f),async()=>{await fb.api.telSoltaVez(tel.tid).catch(()=>{});telLobby()});return telaPrimeiraFrase()}
+    telaReescrever();return}
+  if(a==='telPrimeira'){const f=limpaEntrada($('telTexto').value.trim());if(f.replace(/\s/g,'').length<4)return erro('Escreva uma frase um pouco maior.');ls.set('entrega_telfrase_'+tel.tid,f);escolheCanal(f,()=>telJoga(f),()=>telaPrimeiraFrase());return}
+  if(a==='telEntrarRoda'){const d=tel.dados;if(telJogadores(d).length>=d.info.max)return toast('A roda já encheu!');
+    try{await fb.api.telEntrar(tel.tid,ls.get('entrega_nome','Jogador'));lobbyContaTel(tel.tid,telJogadores(d).length+1)}catch(e){toast('⚠️ Não consegui entrar')}return}
+  if(a==='telSair'){try{await fb.api.telSair(tel.tid);lobbyContaTel(tel.tid,Math.max(1,telJogadores(tel.dados).length-1))}catch(e){}ls.set('entrega_tels',JSON.stringify(listaTels().filter(x=>x.tid!==tel.tid)));telaInicio();return}
+  if(a==='telComecar'){telComecar();return}
+  if(a==='telPular'){const o=telOrdem(tel.dados),v=telDaVez(tel.dados);if(!o||!v)return;
+    try{await fb.api.telInfo(tel.tid,{ordem:o.filter(u=>u!==v)});await fb.api.telSoltaVez(tel.tid).catch(()=>{});toast('⏭️ Vez pulada')}catch(e){toast('⚠️ Não consegui pular')}return}
   if(a==='telEntregar'){const t=limpaEntrada($('telTexto').value.trim());if(t.replace(/\s/g,'').length<2)return erro('Escreva o que você entendeu.');escolheCanal(t,()=>telJoga(t),()=>{telaReescrever();$('telTexto').value=t});return}
   if(a==='telDesiste'){await fb.api.telSoltaVez(tel.tid).catch(()=>{});telLobby();return}
   if(a==='telDeNovo'){telJoga(tel.meuTxt);return}
@@ -60,34 +74,60 @@ async function telAbre(tid,nova){
   if(location.hash)history.replaceState(null,'',location.pathname);
   if(tel.desliga){try{tel.desliga()}catch(e){}}
   tel.tid=tid;tel.dados=null;tel.tela='lobby';
-  if(!nova){await fb.api.telEntrar(tid,ls.get('entrega_nome','Jogador'))}
-  painel('<p>Carregando a roda…</p>');
+  painel('<p>Carregando a roda…</p>');tel.minhaVezAvisada=false;
   tel.desliga=fb.api.telOuvir(tid,d=>{tel.dados=d;
+    if(d&&d.info&&d.info.criador===fb.uid&&telEstado(d)==='espera'&&telJogadores(d).length>=d.info.max)telComecar();
+    if(d&&telEstado(d)==='jogando'&&telDaVez(d)===fb.uid&&!tel.minhaVezAvisada&&!elosDe(d).some(e=>e.de===fb.uid)){tel.minhaVezAvisada=true;sfx('alarme');toast('🎮 É A SUA VEZ!');if(document.hidden)document.title='🎮 Sua vez! — ENTREGA!'}
     if(d&&d.info&&telFim(d)&&d.info.criador===fb.uid)fb.api.lobbyTirar('t-'+tid).catch(()=>{});
     if(d&&d.info)salvaTel(tid,{titulo:'Roda de '+d.info.nome,criei:d.info.criador===fb.uid?1:0});
     if(tel.tela==='lobby')telLobby()});
 }
-function telShareTxt(){const d=tel.dados,f=d.info.max-elosDe(d).length;
+async function telComecar(){const d=tel.dados;if(!d||!d.info||d.info.criador!==fb.uid||telEstado(d)!=='espera'||tel.comecando)return;
+  tel.comecando=true;const js=telJogadores(d);const ordem=[fb.uid,...js.map(j=>j.uid).filter(u=>u!==fb.uid)];
+  try{await fb.api.telInfo(tel.tid,{estado:'jogando',ordem});fb.api.lobbyTirar('t-'+tel.tid).catch(()=>{})}catch(e){toast('⚠️ Não consegui começar')}tel.comecando=false}
+function telaPrimeiraFrase(){tel.tela='primeira';const tm=temaDe(tel.dados.info.tema);
+  painel(`<div class="grande">✍️</div><p style="font-size:14px;margin:0">Tema: ${tm.e} ${esc(tm.n)}</p><h2>Escreva a frase que começa tudo</h2>
+    <input id="telTexto" maxlength="60" placeholder="${esc(tm.ex[0])}"><div class="erro" id="erro"></div>
+    <button data-a="telPrimeira">ENTREGAR ➤</button><button class="sec" data-a="telDesiste">VOLTAR</button>`)}
+function telShareTxt(){const d=tel.dados;if(telEstado(d)==='espera'){const f=d.info.max-telJogadores(d).length;
+    return `📞 Telefone Sem Fio no ENTREGA! Cada pessoa entrega a frase jogando e no fim a gente vê como ela chegou 😂\nFalta${f>1?'m':''} ${f} pessoa${f>1?'s':''} pra começar. Entra na roda:\n${SITE}#t-${tel.tid}`}
+  const f=d.info.max-elosDe(d).length;
   return `📞 Telefone Sem Fio no ENTREGA! A frase tá passando de pessoa em pessoa e cada um entrega jogando 😂\nFalta${f>1?'m':''} ${f} pessoa${f>1?'s':''}. Entra e joga sua vez:\n${SITE}#t-${tel.tid}`}
 function telLobby(){
   tel.tela='lobby';const d=tel.dados;
   if(!d||!d.info)return painel('<p>Carregando a roda…</p><button class="sec" data-a="menu">VOLTAR</button>');
-  const el=elosDe(d),max=d.info.max,fim=telFim(d),eu=fb.uid,joguei=el.some(e=>e.de===eu),criador=d.info.criador===eu;
+  const eu=fb.uid,criador=d.info.criador===eu,max=d.info.max,tm=temaDe(d.info.tema),estado=telEstado(d),js=telJogadores(d),dentro=js.some(j=>j.uid===eu);
+  const topo=`<div class="grande">📞</div><h2>Roda de ${esc(d.info.nome)}</h2><p style="font-size:14px;margin:0">Tema: ${tm.e} <b>${esc(tm.n)}</b></p>`;
+  const convite=`<textarea id="share" rows="4" readonly>${esc(telShareTxt())}</textarea><button class="sec" data-a="copiar">📋 COPIAR CONVITE</button><div class="erro" id="erro"></div>`;
+  if(estado==='espera'){
+    const vagas=Array.from({length:max},(_,i)=>{const j=js[i];return `<div class="vaga ${j?'ok':''}">${j?`🙋 ${esc(j.nome)}${j.uid===eu?' (você)':''}${j.uid===d.info.criador?' 👑':''}`:'⏳ vaga livre'}</div>`}).join('');
+    let acao='';
+    if(criador)acao=`<p>⏳ Esperando todo mundo entrar… <b>${js.length}/${max}</b><br><small>A roda começa sozinha quando encher.</small></p>${convite}
+      ${js.length>=2?`<button class="rosa" data-a="telComecar">▶️ COMEÇAR AGORA COM ${js.length}</button>`:''}`;
+    else if(dentro)acao=`<p>✅ Você está na roda! <b>${js.length}/${max}</b><br><small>Espere todo mundo entrar. O jogo avisa quando for sua vez.</small></p>${convite}<button class="sec" data-a="telSair">SAIR DA RODA</button>`;
+    else if(js.length<max)acao=`<p><b>${js.length}/${max}</b> pessoas na roda.</p><button data-a="telEntrarRoda">✋ ENTRAR NA RODA</button>`;
+    else acao='<p>😕 Essa roda já encheu.</p>';
+    return painel(`${topo}<div class="vagas">${vagas}</div>${acao}<button class="sec" data-a="menu">MENU</button>`);
+  }
+  const el=elosDe(d),fim=telFim(d),joguei=el.some(e=>e.de===eu),ordem=telOrdem(d);
+  let lista='',corpo='';
+  if(ordem){const nomes=Object.fromEntries(js.map(j=>[j.uid,j.nome]));el.forEach(e=>{nomes[e.de]=e.nome});
+    lista='<div class="vagas">'+ordem.map((u,i)=>{const feito=i<el.length,agora=i===el.length&&!fim;
+      return `<div class="vaga ${feito?'ok':''} ${agora?'agora':''}">${feito?'✅':agora?'🎮':'⏳'} ${i+1}. ${esc(nomes[u]||'?')}${u===eu?' (você)':''}</div>`}).join('')+'</div>'}
+  else{const bolinhas=Array.from({length:max},(_,i)=>`<span class="${i<el.length?'feita':''}">${i<el.length?'✉️':'·'}</span>`).join('');
+    lista=`<div class="rota">${bolinhas}</div><p style="font-size:14px">${el.length}/${max} entregas</p>`}
+  const vezUid=telDaVez(d),vezNome=vezUid?(js.find(j=>j.uid===vezUid)||{}).nome:null;
   const vez=d.vez&&d.vez.ate>Date.now()&&d.vez.uid!==eu?d.vez:null;
-  const bolinhas=Array.from({length:max},(_,i)=>`<span class="${i<el.length?'feita':''}">${i<el.length?'✉️':'·'}</span>`).join('');
-  const quem=el.map((e,i)=>`${i+1}. ${esc(e.nome)}${e.de===eu?' (você)':''}`).join(' → ');
-  let corpo='';
   if(fim)corpo=`<p>A roda acabou! Veja como a frase mudou de pessoa em pessoa 👇</p><button data-a="telReveal">🎬 VER REVELAÇÃO</button>`;
-  else if(joguei)corpo=`<p>✅ Você já jogou sua vez. ${vez?`<br>🎮 <b>${esc(vez.nome)}</b> está jogando agora…`:'Agora é só esperar e chamar mais gente!'}</p>
-    <textarea id="share" rows="4" readonly>${esc(telShareTxt())}</textarea><button class="sec" data-a="copiar">📋 COPIAR CONVITE</button><div class="erro" id="erro"></div>
-    ${criador&&el.length>=2?'<button class="rosa" data-a="telRevelarJa">🎬 ENCERRAR E REVELAR AGORA</button>':''}`;
+  else if(ordem&&vezUid===eu)corpo=`<p class="ok"><b>🎮 É A SUA VEZ!</b></p><button data-a="telVez">🎮 JOGAR MINHA VEZ</button>`;
+  else if(ordem)corpo=`<p>${joguei?'✅ Você já jogou. ':''}Agora é a vez de <b>${esc(vezNome||'?')}</b>…</p>
+    ${criador?`<button class="sec" data-a="telPular">⏭️ PULAR ${esc((vezNome||'').toUpperCase())}</button>`:''}`;
+  else if(joguei)corpo=`<p>✅ Você já jogou sua vez. ${vez?`<br>🎮 <b>${esc(vez.nome)}</b> está jogando agora…`:'Agora é só esperar e chamar mais gente!'}</p>${convite}`;
   else if(!el.length)corpo=`<p>⏳ Esperando ${esc(d.info.nome)} começar a roda…</p>`;
   else if(vez)corpo=`<p>🎮 <b>${esc(vez.nome)}</b> está jogando agora. Espere a vez dele terminar…</p>`;
   else corpo=`<p>A frase chegou até aqui depois de ${el.length} pessoa${el.length>1?'s':''}. Agora é você!</p><button data-a="telVez">🎮 JOGAR MINHA VEZ</button>`;
-  const tm=temaDe(d.info.tema);
-  painel(`<div class="grande">📞</div><h2>Roda de ${esc(d.info.nome)}</h2><p style="font-size:14px;margin:0">Tema: ${tm.e} <b>${esc(tm.n)}</b></p>
-    <div class="rota">${bolinhas}</div><p style="font-size:14px">${el.length}/${max} entregas${quem?'<br>'+quem:''}</p>
-    ${corpo}<button class="sec" data-a="menu">MENU</button>`);
+  if(!fim&&criador&&el.length>=2)corpo+='<button class="rosa" data-a="telRevelarJa">🎬 ENCERRAR E REVELAR AGORA</button>';
+  painel(`${topo}${lista}${corpo}<button class="sec" data-a="menu">MENU</button>`);
 }
 function telaReescrever(){
   tel.tela='reescrever';
@@ -121,8 +161,9 @@ async function telefoneConcluido(){
   const elo={de:fb.uid,nome:ls.get('entrega_nome','Jogador').slice(0,12),recebeu:(tel.prev||'').slice(0,80),txt:J.txt.slice(0,80),vis:textoEstragado().slice(0,80),pct:pctInteiro(),t:Date.now()};if(st.cv)elo.canal=st.cv.id;
   const pts=Math.round((200+st.vidas*120+st.pegos*30+st.letrasPegas*15)*multCanal());
   try{await fb.api.telElo(tel.tid,chaveElo(i),elo);await fb.api.telSoltaVez(tel.tid).catch(()=>{});
-    if(i+1>=tel.dados.info.max)await fb.api.telEncerra(tel.tid).catch(()=>{});
-    lobbyAtualizaTel(tel.tid,i+1,tel.dados.info.max,tel.dados.info.criador===fb.uid);
+    const total=(telOrdem(tel.dados)||[]).length||tel.dados.info.max;
+    if(i+1>=total)await fb.api.telEncerra(tel.tid).catch(()=>{});
+    if(!telOrdem(tel.dados))lobbyAtualizaTel(tel.tid,i+1,tel.dados.info.max,tel.dados.info.criador===fb.uid);
     ganhaPontos(pts,elo.pct);toast('✓✓ Passou adiante! '+elo.pct+'% inteira');telLobby()}
   catch(e){painel(`<div class="grande">⚠️</div><h2 class="ruim">Não consegui salvar sua vez</h2><p>Pode ser a internet, ou alguém jogou na mesma hora.</p><button data-a="telLobby">VOLTAR PRA RODA</button>`)}
 }

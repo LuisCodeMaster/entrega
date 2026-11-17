@@ -19,7 +19,7 @@ function renderLobby(){
   const abas=`<div class="abas" style="grid-template-columns:repeat(3,1fr)">${[['todas','🌍 Todas',todas.length],['telefone','📞 Telefone',nT],['online','🎧 Online',nO]].map(([k,t,c])=>`<button class="${lobbyFiltro===k?'on':''}" data-a="lobbyFiltro" data-n="${k}">${t} (${c})</button>`).join('')}</div>`;
   const linhas=l.map(x=>{const meu=x.dono===fb.uid;
     if(x.tipo==='telefone'){const tm=temaDe(x.tema),vagas=(x.max||0)-(x.feitos||0);
-      return `<div class="sl"><div class="slInfo"><b>📞 Roda de ${esc(x.nome)}</b><small>${tm.e} ${esc(tm.n)} · ${x.feitos||0}/${x.max} entregas · ${vagas} vaga${vagas>1?'s':''}</small></div>
+      return `<div class="sl"><div class="slInfo"><b>📞 Roda de ${esc(x.nome)}</b><small>${tm.e} ${esc(tm.n)} · ${x.feitos||0}/${x.max} na roda · ${vagas} vaga${vagas>1?'s':''}</small></div>
         ${lobbyAdmin&&!meu?`<button class="slDel" data-a="lobbyApaga" data-n="${x.id}">🗑️</button>`:''}<button data-a="lobbyTel" data-n="${x.tid}">${meu?'ABRIR':'ENTRAR'}</button></div>`}
     return `<div class="sl"><div class="slInfo"><b>🎧 Sala de ${esc(x.nome)}</b><small>Piloto + Operador · esperando 1 pessoa</small></div>
       ${lobbyAdmin&&!meu?`<button class="slDel" data-a="lobbyApaga" data-n="${x.id}">🗑️</button>`:''}${meu?'<small style="opacity:.7">sua sala</small>':`<button data-a="lobbyOnline" data-n="${x.codigo}">ENTRAR</button>`}</div>`}).join('');
@@ -44,7 +44,8 @@ async function lobbyAcao(a,n){
 function htmlPublico(){return `<button class="chk ${lobbyPublico?'on':''}" data-a="publico">${lobbyPublico?'☑️':'⬜'} 🌍 Aparecer no Lobby (qualquer pessoa pode entrar)</button>`}
 // ---- publicar / tirar ----
 async function lobbyPublicaTel(tid,info){if(!lobbyPublico)return;
-  try{await fb.api.lobbyPor('t-'+tid,{tipo:'telefone',tid,dono:fb.uid,nome:info.nome,tema:info.tema,max:info.max,feitos:0,t:Date.now()})}catch(e){}}
+  try{await fb.api.lobbyPor('t-'+tid,{tipo:'telefone',tid,dono:fb.uid,nome:info.nome,tema:info.tema,max:info.max,feitos:1,t:Date.now()})}catch(e){}}
+function lobbyContaTel(tid,n){fb.api.lobbyFeito('t-'+tid,n).catch(()=>{})}
 function lobbyAtualizaTel(tid,feitos,max,souDono){
   if(feitos>=max&&souDono)fb.api.lobbyTirar('t-'+tid).catch(()=>{});else fb.api.lobbyFeito('t-'+tid,feitos).catch(()=>{})}
 async function lobbyPublicaOnline(){if(!lobbyPublico||!conversasAtivas())return;
