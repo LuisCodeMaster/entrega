@@ -14,15 +14,6 @@ function jogarJ(){
   novo(seq[J.pos],{vidas:J.vidas,sinal:J.sinal,primeira:J.pos===0,ultima:J.pos===seq.length-1,rotulo:'LEG '+(J.pos+1)+'/5'});
   aplicaCanal();
 }
-function comecaOnline(piloto){canalAtual=null;
-  modo='online';net.piloto=piloto;net.souPiloto=(piloto===net.role);
-  fixo=true;resize();fechaPainel();
-  const seq=ROTAS[J.rota];dados={de:J.de,para:J.para};
-  novo(seq[J.pos],{vidas:J.vidas,sinal:J.sinal,primeira:J.pos===0,ultima:J.pos===seq.length-1,online:true,lento:true,
-    rotulo:(net.souPiloto?'🕹️ YOU ARE THE PILOT':'📡 YOU ARE THE OPERATOR')});
-  if(!net.souPiloto){st.estado='espectador';st.snap=null}
-  mostraCtrl();
-}
 function menu(){fechaChat();modo='treino';J=null;fixo=false;resize();mostraCtrl();telaInicio();novo(nivelSel);st.estado='parado'}
 
 // ================= CONTROLES ONLINE =================

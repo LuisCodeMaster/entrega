@@ -52,3 +52,5 @@ function normal(s){return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''
 function lev(a,b){const d=Array.from({length:a.length+1},(_,i)=>[i]);for(let j=1;j<=b.length;j++)d[0][j]=j;
   for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[a.length][b.length]}
 function parecido(a,b){a=normal(a);b=normal(b);const m=Math.max(a.length,b.length);return m?Math.round((1-lev(a,b)/m)*100):100}
+// o modo online (Piloto + Operador) foi removido; isto só evita erro em trechos antigos
+const net={role:null,souPiloto:false,piloto:'host',outroNome:'',meuNome:'',lobbyId:null,sala:null};function envia(){}

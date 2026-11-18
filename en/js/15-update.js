@@ -118,19 +118,10 @@ function derrotaChefe(){sfx('explosao');
 function faseVencida(){sfx('vitoria');
   st.estado='fim';
   if(modo!=='chat'&&modo!=='telefone')ganhaPontos(120+st.vidas*40+st.pegos*10);
-  if(modo==='treino'){
-    if(st.n+1>liberado){liberado=Math.min(FASES.length-1,st.n+1);ls.set('entrega_lib',liberado)}
-    return telaTreinoFim(true);
-  }
   if(modo==='chat')return entregaConcluida();
   if(modo==='telefone')return telefoneConcluido();
   J.pts+=Math.round((300+st.vidas*150+st.pegos*30)*multCanal());
   J.pos++;J.vidas=Math.min(3,st.vidas+1);J.sinal=Math.max(70,st.sinal);
-  if(modo==='online'){
-    mostraCtrl();envia({t:'fim',ok:true,J,chefe:st.bossEmoji});
-    if(J.pos>=ROTAS[J.rota].length)return telaOnlineChegou();
-    return telaOnlineFaseOk(st.bossEmoji);
-  }
   if(J.pos>=ROTAS[J.rota].length)return telaChegou();
   if(J.pos===CORTE)return telaPassar();
   telaFaseOk();
@@ -139,8 +130,7 @@ function perdeu(motivo){sfx('perdeu');
   st.estado='fim';
   if(modo==='chat'){setTimeout(()=>telaChatPerdeu(motivo),500);return}
   if(modo==='telefone'){setTimeout(()=>telaTelPerdeu(motivo),500);return}
-  if(modo==='online'){mostraCtrl();envia({t:'fim',ok:false,motivo,J});setTimeout(()=>telaOnlinePerdeu(motivo),500);return}
-  setTimeout(()=>modo==='jornada'?telaPerdeu(motivo):telaTreinoFim(false,motivo),500);
+  setTimeout(()=>telaPerdeu(motivo),500);
 }
 function atualizaParts(dt){for(const q of st.parts){q.x+=q.vx*dt;q.y+=q.vy*dt;q.v-=dt}st.parts=st.parts.filter(q=>q.v>0)}
 function explodir(x,y,c,n){for(let i=0;i<n;i++){const a=R()*7,s=80+R()*220;st.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,v:.5+R()*.4,c,s:3+R()*4})}}
