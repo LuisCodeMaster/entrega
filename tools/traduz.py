@@ -317,6 +317,8 @@ T = [
  ("const VIS_ABAS=[['cor','🎨 Cor'],['cara','😀 Carinha'],['ace','🎩 Chapéu'],['selo','📮 Selo'],['rastro','✨ Rastro'],['titulo','🏅 Título']];", "const VIS_ABAS=[['cor','🎨 Color'],['cara','😀 Face'],['ace','🎩 Hat'],['selo','📮 Stamp'],['rastro','✨ Trail'],['titulo','🏅 Title']];"),
  ('<button class="rosa" data-a="visSorteia">🎲 VISUAL ALEATÓRIO</button>', '<button class="rosa" data-a="visSorteia">🎲 RANDOM LOOK</button>'),
 
+ ('<div class="tag">A JORNADA DA MENSAGEM</div>', '<div class="tag">THE MESSAGE\'S JOURNEY</div>'),
+
  # ---------- mural ----------
  ("toast('Precisa de pelo menos 2 entregas')", "toast('Needs at least 2 deliveries')"),
  ("toast('📊 Publicado no mural!')", "toast('📊 Posted to the wall!')"),

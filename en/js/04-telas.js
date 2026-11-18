@@ -1,6 +1,7 @@
 // ================= PAINEL =================
 let aba='conversas';
-function painel(html){$('card').innerHTML=html;$('painel').classList.remove('oculta')}
+function painel(html){const p=$('painel'),c=$('card'),abrindo=p.classList.contains('oculta');c.innerHTML=html;p.classList.remove('oculta');
+  if(abrindo){c.classList.remove('entra');void c.offsetWidth;c.classList.add('entra')}}
 function fechaPainel(){$('painel').classList.add('oculta');document.activeElement&&document.activeElement.blur()}
 function erro(t){const e=$('erro');if(e)e.textContent=t}
 function rotaHtml(online){
@@ -47,11 +48,12 @@ function telaInicio(){
   if(aba==='treino'){corpo=`<p style="font-size:14px">Play any unlocked stage on your own.</p><div class="fases">`+
     FASES.map((f,i)=>{const ok=i<=liberado;return `<button class="${ok?'':'bloq '}${i===nivelSel?'sel':''}" data-a="fase" data-n="${i}">${ok?f.chefe.emoji:'🔒'}<small>Stage ${i+1}</small></button>`}).join('')+
     `</div><button data-a="treinar">PLAY STAGE ${nivelSel+1}</button>`}
-  painel(`<h1>✉️ ENTREGA!</h1>
+  painel(`<h1 class="logo"><span class="env">✉️</span><span class="txt">ENTREGA!</span></h1>
+    <div class="tag">THE MESSAGE'S JOURNEY</div>
     <p>You are a <b>message</b> traveling from one phone to another.</p>
-    <div class="perfil"><a class="lang" href="${LANG_LINK}">${LANG_TXT}</a><span>⭐ ${perfil.pts}</span><button data-a="visual">🎽 Visual</button><button data-a="ranking">🏆 Ranking</button><button data-a="mural">📊 Wall</button><button data-a="som">${AU.mudo?'🔇':'🔊'}</button><button data-a="musica" class="${AU.estiloMusica==='off'?'desl':''}" title="Music">🎵</button></div>
+    <div class="perfil topo"><a class="lang" href="${LANG_LINK}">${LANG_TXT}</a><span class="pts">⭐ ${perfil.pts}</span><button data-a="visual">🎽 Visual</button><button data-a="ranking">🏆 Ranking</button><button data-a="mural">📊 Wall</button><button data-a="som">${AU.mudo?'🔇':'🔊'}</button><button data-a="musica" class="${AU.estiloMusica==='off'?'desl':''}" title="Music">🎵</button></div>
     <button class="lobbyBtn" data-a="lobby">🌍 LOBBY · open rooms to join</button>
-    <div class="abas" style="grid-template-columns:repeat(3,1fr)">
+    <div class="abas modos" style="grid-template-columns:repeat(3,1fr)">
       <button class="${aba==='conversas'?'on':''}" data-a="aba" data-n="conversas">💬<br>Chat</button>
       <button class="${aba==='telefone'?'on':''}" data-a="aba" data-n="telefone">📞<br>Telephone</button>
       <button class="${aba==='online'?'on':''}" data-a="aba" data-n="online">🎧<br>Online</button>
@@ -59,7 +61,7 @@ function telaInicio(){
       <button class="${aba==='receber'?'on':''}" data-a="aba" data-n="receber">📦<br>Code</button>
       <button class="${aba==='treino'?'on':''}" data-a="aba" data-n="treino">🎯<br>Practice</button>
     </div>${corpo}
-    <div class="dica">Phone: drag your finger (best in landscape). PC: arrows / WASD.<br>Grab 📶, dodge 🦠 🔥 📧. Against bosses you shoot ✓ automatically.</div>`);
+    <div class="dica comoJoga">Phone: drag your finger (best in landscape). PC: arrows / WASD.<br>Grab 📶, dodge 🦠 🔥 📧. Against bosses you shoot ✓ automatically.</div>`);
 }
 // ---- online: salas ----
 function telaSalaCriada(){

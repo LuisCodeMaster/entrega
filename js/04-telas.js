@@ -1,6 +1,7 @@
 // ================= PAINEL =================
 let aba='conversas';
-function painel(html){$('card').innerHTML=html;$('painel').classList.remove('oculta')}
+function painel(html){const p=$('painel'),c=$('card'),abrindo=p.classList.contains('oculta');c.innerHTML=html;p.classList.remove('oculta');
+  if(abrindo){c.classList.remove('entra');void c.offsetWidth;c.classList.add('entra')}}
 function fechaPainel(){$('painel').classList.add('oculta');document.activeElement&&document.activeElement.blur()}
 function erro(t){const e=$('erro');if(e)e.textContent=t}
 function rotaHtml(online){
@@ -47,11 +48,12 @@ function telaInicio(){
   if(aba==='treino'){corpo=`<p style="font-size:14px">Jogue qualquer fase liberada sozinho.</p><div class="fases">`+
     FASES.map((f,i)=>{const ok=i<=liberado;return `<button class="${ok?'':'bloq '}${i===nivelSel?'sel':''}" data-a="fase" data-n="${i}">${ok?f.chefe.emoji:'🔒'}<small>Fase ${i+1}</small></button>`}).join('')+
     `</div><button data-a="treinar">JOGAR FASE ${nivelSel+1}</button>`}
-  painel(`<h1>✉️ ENTREGA!</h1>
+  painel(`<h1 class="logo"><span class="env">✉️</span><span class="txt">ENTREGA!</span></h1>
+    <div class="tag">A JORNADA DA MENSAGEM</div>
     <p>Você é uma <b>mensagem</b> viajando de um celular para o outro.</p>
-    <div class="perfil"><a class="lang" href="${LANG_LINK}">${LANG_TXT}</a><span>⭐ ${perfil.pts}</span><button data-a="visual">🎽 Visual</button><button data-a="ranking">🏆 Ranking</button><button data-a="mural">📊 Mural</button><button data-a="som">${AU.mudo?'🔇':'🔊'}</button><button data-a="musica" class="${AU.estiloMusica==='off'?'desl':''}" title="Música">🎵</button></div>
+    <div class="perfil topo"><a class="lang" href="${LANG_LINK}">${LANG_TXT}</a><span class="pts">⭐ ${perfil.pts}</span><button data-a="visual">🎽 Visual</button><button data-a="ranking">🏆 Ranking</button><button data-a="mural">📊 Mural</button><button data-a="som">${AU.mudo?'🔇':'🔊'}</button><button data-a="musica" class="${AU.estiloMusica==='off'?'desl':''}" title="Música">🎵</button></div>
     <button class="lobbyBtn" data-a="lobby">🌍 LOBBY · salas abertas pra entrar</button>
-    <div class="abas" style="grid-template-columns:repeat(3,1fr)">
+    <div class="abas modos" style="grid-template-columns:repeat(3,1fr)">
       <button class="${aba==='conversas'?'on':''}" data-a="aba" data-n="conversas">💬<br>Conversa</button>
       <button class="${aba==='telefone'?'on':''}" data-a="aba" data-n="telefone">📞<br>Telefone</button>
       <button class="${aba==='online'?'on':''}" data-a="aba" data-n="online">🎧<br>Online</button>
@@ -59,7 +61,7 @@ function telaInicio(){
       <button class="${aba==='receber'?'on':''}" data-a="aba" data-n="receber">📦<br>Código</button>
       <button class="${aba==='treino'?'on':''}" data-a="aba" data-n="treino">🎯<br>Treino</button>
     </div>${corpo}
-    <div class="dica">Celular: arraste o dedo (melhor deitado). PC: setas / WASD.<br>Pegue 📶, desvie de 🦠 🔥 📧. No chefe, você atira ✓ sozinho.</div>`);
+    <div class="dica comoJoga">Celular: arraste o dedo (melhor deitado). PC: setas / WASD.<br>Pegue 📶, desvie de 🦠 🔥 📧. No chefe, você atira ✓ sozinho.</div>`);
 }
 // ---- online: salas ----
 function telaSalaCriada(){

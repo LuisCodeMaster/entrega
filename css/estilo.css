@@ -139,3 +139,65 @@
   #vivoBar{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:10px;padding:6px 6px 6px 14px;border-radius:16px;background:rgba(10,14,30,.82);color:#fff;font-weight:700;font-size:14px;max-width:94vw;box-shadow:0 0 0 2px #ff4d6d}
   #vivoBar.oculta{display:none}#vivoBar button{width:auto;margin:0;padding:8px 12px;font-size:13px;border-radius:12px;background:#ff4d6d;color:#fff;box-shadow:none}
   #novaVersao{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:20;width:auto;max-width:92vw;margin:0;padding:10px 16px;font-size:15px;border-radius:14px;background:#ffd24d;color:#3a2a00;box-shadow:0 6px 20px rgba(0,0,0,.45)}
+
+  /* ================= VISUAL NOVO ================= */
+  :root{--verde:#5cf0a8;--azul:#4fc3ff;--rosa:#ff7ac0;--roxo:#b48cff;--ouro:#ffd24d}
+  #painel{background:radial-gradient(900px 520px at 8% -8%,rgba(180,140,255,.30),transparent 62%),radial-gradient(800px 560px at 108% 108%,rgba(92,240,168,.22),transparent 60%),radial-gradient(600px 400px at 100% 0%,rgba(79,195,255,.16),transparent 60%),rgba(6,8,22,.88);backdrop-filter:blur(7px)}
+  #painel::before{content:'';position:fixed;inset:-60px;pointer-events:none;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='none' stroke='white' stroke-width='3' stroke-linejoin='round'%3E%3Crect x='14' y='22' width='38' height='26' rx='4'/%3E%3Cpath d='M14 25l19 13 19-13'/%3E%3Crect x='70' y='76' width='30' height='21' rx='3' transform='rotate(-12 85 86)'/%3E%3Cpath d='M70 79l15 10 15-10' transform='rotate(-12 85 86)'/%3E%3C/g%3E%3Ccircle cx='96' cy='26' r='3' fill='white'/%3E%3Ccircle cx='30' cy='96' r='2' fill='white'/%3E%3C/svg%3E");
+    animation:fundoAnda 40s linear infinite}
+  @keyframes fundoAnda{to{transform:translate(120px,-120px)}}
+  .card{position:relative;background:linear-gradient(165deg,rgba(38,48,110,.94),rgba(15,20,50,.96) 70%);border:0;border-radius:28px;padding:24px 20px 20px;
+    box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.04),inset 0 1px 0 rgba(255,255,255,.14)}
+  .card::before{content:'';position:absolute;inset:0;border-radius:inherit;padding:2px;pointer-events:none;opacity:.6;
+    background:linear-gradient(135deg,var(--verde),var(--azul) 35%,var(--roxo) 65%,var(--rosa));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+  .card.entra{animation:cardEntra .38s cubic-bezier(.2,1.3,.4,1)}
+  @keyframes cardEntra{from{opacity:0;transform:translateY(18px) scale(.96)}}
+  h2{text-shadow:0 2px 12px rgba(0,0,0,.35)}
+  /* logo */
+  .logo{display:flex;align-items:center;justify-content:center;gap:10px;font-size:46px;letter-spacing:1px;margin-bottom:0;color:inherit}
+  .logo .txt{background:linear-gradient(90deg,#5cf0a8,#4fc3ff,#b48cff,#ff7ac0,#5cf0a8);background-size:220% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:logoBrilha 7s linear infinite;filter:drop-shadow(0 4px 16px rgba(92,240,168,.35))}
+  .logo .env{display:inline-block;font-size:40px;animation:envVoa 2.6s ease-in-out infinite;filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))}
+  @keyframes logoBrilha{to{background-position:220% center}}
+  @keyframes envVoa{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-7px) rotate(6deg)}}
+  .tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:3px;color:#c9b6ff;background:rgba(180,140,255,.12);border:1px solid rgba(180,140,255,.3);border-radius:999px;padding:2px 12px;margin:2px 0 10px}
+  /* barra de perfil */
+  .perfil.topo{gap:7px;margin:0 0 6px}
+  .perfil .pts{background:linear-gradient(180deg,#ffe27a,#ffb800);color:#4a3200;border-radius:999px;padding:5px 13px;font-size:15px;box-shadow:0 3px 0 #b07d00,0 6px 16px rgba(255,200,0,.25)}
+  .perfil button{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);box-shadow:none;border-radius:999px;padding:6px 13px;transition:transform .12s,background .12s}
+  .perfil button:hover{background:rgba(255,255,255,.14);transform:translateY(-1px)}
+  .perfil .lang{border-radius:999px;border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.04)}
+  /* botões */
+  button{background:linear-gradient(180deg,#7dffc4,#46dc96);box-shadow:0 5px 0 #24945c,0 10px 22px rgba(92,240,168,.18);transition:transform .1s,filter .12s}
+  button:hover{filter:brightness(1.06)}
+  button:active{box-shadow:0 2px 0 #24945c}
+  button.sec{background:linear-gradient(180deg,#3d4c98,#2c3876);box-shadow:0 5px 0 #1a2252,0 10px 22px rgba(0,0,0,.2)}
+  button.rosa{background:linear-gradient(180deg,#ffb3e0,#ff7ac0);box-shadow:0 5px 0 #c2508f,0 10px 22px rgba(255,122,192,.22)}
+  .lobbyBtn{position:relative;overflow:hidden;background:linear-gradient(90deg,#4fc3ff,#5cf0a8,#4fc3ff);background-size:200% auto;animation:lobbyMexe 5s linear infinite;box-shadow:0 5px 0 #23889c,0 10px 26px rgba(79,195,255,.28)}
+  .lobbyBtn::after{content:'';position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:brilhoPassa 3.2s ease-in-out infinite}
+  @keyframes lobbyMexe{to{background-position:200% center}}
+  @keyframes brilhoPassa{0%,55%{left:-60%}100%{left:130%}}
+  /* abas */
+  .abas button{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#b9c1e6;border-radius:12px;transition:transform .12s,background .12s}
+  .abas button:hover{background:rgba(255,255,255,.1)}
+  .abas button.on{background:linear-gradient(180deg,#7dffc4,#46dc96);color:#08321d;border-color:transparent;box-shadow:0 6px 18px rgba(92,240,168,.3)}
+  .abas.modos{gap:8px;margin:12px 0 8px;grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .abas>button{min-width:0}
+  .abas.modos button{padding:9px 4px 7px;font-size:13.5px;border-radius:16px;line-height:1.05}
+  .abas.modos button::first-line{font-size:24px;line-height:1.25}
+  .abas.modos button.on{transform:translateY(-2px)}
+  /* campos */
+  input,textarea{background:rgba(4,7,20,.65);border:1.5px solid rgba(255,255,255,.12);border-radius:14px;padding:11px 14px;transition:border-color .15s,box-shadow .15s}
+  input:focus,textarea:focus{border-color:var(--verde);box-shadow:0 0 0 4px rgba(92,240,168,.16)}
+  input::placeholder,textarea::placeholder{color:#6f78a3}
+  label{font-weight:700;letter-spacing:.3px;opacity:.7}
+  /* dicas */
+  .dica.comoJoga{background:rgba(255,255,255,.04);border:1px dashed rgba(255,255,255,.14);border-radius:14px;padding:9px 12px;opacity:.8}
+  .vis button,.temas button,.canais button,.convs button,.rk,.sl{transition:transform .12s}
+  .vis button:hover,.canais button:hover,.convs button:hover{transform:translateY(-1px)}
+  .roleta{background:radial-gradient(circle at 50% 30%,#323d7c,#1c2350);border-radius:22px}
+  #toast{background:linear-gradient(180deg,#7dffc4,#46dc96);border-radius:999px;padding:9px 18px}
+  @media (max-width:380px){.logo{font-size:38px}.logo .env{font-size:32px}.abas.modos button::first-line{font-size:21px}}
+  @media (prefers-reduced-motion:reduce){#painel::before,.logo .txt,.logo .env,.lobbyBtn,.lobbyBtn::after{animation:none}}
