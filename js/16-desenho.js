@@ -42,7 +42,7 @@ function mensagem(){
   if(st.pegouT&&st.pegouT.v>0){ctx.globalAlpha=Math.min(1,st.pegouT.v*2);ctx.font='800 22px "Baloo 2", serif';ctx.fillStyle='#ffd24d';ctx.textAlign='center';ctx.fillText('+'+st.pegouT.ch,st.x,st.y-34-(.7-st.pegouT.v)*30);ctx.globalAlpha=1;st.pegouT.v-=1/60}
   if(st.inv>0&&Math.floor(st.t*14)%2)return;
   const rindo=st.efeitos&&st.efeitos.includes('kkk');
-  const sk=(modo==='online'&&!net.souPiloto)?{cor:CORES_ENV[0],rastro:'padrao',cara:'feliz'}:skin();
+  const sk=st.vivo?(st.vivoSk||{cor:CORES_ENV[0],rastro:'padrao',cara:'feliz'}):(modo==='online'&&!net.souPiloto)?{cor:CORES_ENV[0],rastro:'padrao',cara:'feliz'}:skin();
   desenhaEnvelope(ctx,st.x,st.y,sk,st.t,{rot:Math.max(-.35,Math.min(.35,(st.vy||0)*.0012))+(rindo?Math.sin(st.t*22)*.12:0),rindo,serio:estadoVisivel()==='chefe'});
   if(st.letraT>0){ctx.globalAlpha=Math.min(1,st.letraT);ctx.font='800 16px "Baloo 2"';ctx.fillStyle='#ff6b8a';ctx.textAlign='center';ctx.fillText('letras perdidas!',st.x,st.y-30-(1.2-st.letraT)*20);ctx.globalAlpha=1;st.letraT-=1/60}
 }

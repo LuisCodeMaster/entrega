@@ -14,6 +14,7 @@ function vivoSnap(){
   const r=Math.round;
   return {u:fb.uid,n:ls.get('entrega_nome','Jogador').slice(0,12),t:Date.now(),
     x:r(st.x),y:r(st.y),d:r(st.dist),dm:r(st.distMax),si:r(st.sinal),vi:st.vidas,e:st.estado,f:st.n,cv:st.cv?st.cv.id:'',vel:r(st.vel),es:st.escudos||0,
+    sk:{c:perfil.cor,r:perfil.rastro,f:perfil.cara,a:perfil.ace||'nenhum',s:perfil.selo||'nenhum',ti:perfil.titulo||'novato'},
     tx:textoEstragado().slice(0,80),bt:st.banner>0?st.bannerTxt:'',bn:+Math.max(0,st.banner).toFixed(1),
     o:st.obs.map(o=>o.k==='parede'?['parede',r(o.x),r(o.gy),r(o.gap),o.w,o.emo||'',o.mov||0,r(o.vel||0)]:[o.k,r(o.x),r(o.y),r(o.r),o.emo||'',r(o.vx||0),r(o.vy||0),r(o.vel||0),o.tub?1:0]),
     i:st.itens.map(i=>i.k==='letra'?[r(i.x),r(i.y),i.ch,i.oculta?1:0]:[r(i.x),r(i.y)]),
@@ -36,7 +37,7 @@ function vivoAssistir(){
   if(!fb.api.vivoOuvir)return toast('⚠️ Ao vivo indisponível');
   vivoSai(true);
   Object.assign(vivo,{on:true,uid:d.vez.uid,nome:d.vez.nome||'?',viu:false,ultT:0,espera:0,perdeu:false,alvo:null});
-  tel.tela='vivo';fechaPainel();fixo=false;resize();
+  contaPerfil('assistiu');tel.tela='vivo';fechaPainel();fixo=false;resize();
   novo(0,{semChefe:true});Object.assign(st,{estado:'espectador',vivo:true,remEstado:'corrida',zonas:[],inter:0,queda:0,invT:0,desafio:null,vivoTx:''});
   st.banner=0;
   try{vivo.ouveOff=fb.api.vivoOuvir(tel.tid,vivoRecebe)}catch(e){}
@@ -44,7 +45,7 @@ function vivoAssistir(){
   $('vivoBar').classList.remove('oculta');vivoBarra();
 }
 function vivoBarra(){
-  $('vivoTxt').textContent=vivo.perdeu?`💥 ${vivo.nome} se perdeu… esperando tentar de novo`:vivo.viu?`🔴 AO VIVO · ${vivo.nome}`:`⏳ Conectando com ${vivo.nome}…`;
+  $('vivoTxt').textContent=vivo.perdeu?`💥 ${vivo.nome} se perdeu… esperando tentar de novo`:vivo.viu?`🔴 AO VIVO · ${vivo.nome}${vivo.tit?' · '+vivo.tit:''}`:`⏳ Conectando com ${vivo.nome}…`;
 }
 function vivoSai(silencio){
   if(vivo.ouveOff){try{vivo.ouveOff()}catch(e){}vivo.ouveOff=null}
@@ -62,6 +63,7 @@ function vivoRecebe(s){
   const novoJogo=!vivo.viu||vivo.perdeu;vivo.viu=true;vivo.perdeu=false;vivo.ultT=performance.now();vivoBarra();
   if(novoJogo||st.n!==s.f){novo(s.f||0,{semChefe:true});st.banner=0;st.bannerTxt=''}
   const cv=canalDe(s.cv);
+  if(s.sk){const k=s.sk;st.vivoSk={cor:achaItem(CORES_ENV,k.c),rastro:RASTROS.some(x=>x.id===k.r)?k.r:'padrao',cara:k.f,ace:k.a,selo:k.s};const tt=tituloDe(k.ti);if(tt!==vivo.tit){vivo.tit=tt;vivoBarra()}}
   Object.assign(st,{estado:'espectador',vivo:true,remEstado:s.e==='chegando'?'chegando':'corrida',dist:s.d,distMax:s.dm||1,sinal:s.si,vidas:s.vi,vel:s.vel||st.vel,escudos:s.es||0,
     cv,vivoTx:s.tx||'',queda:s.q?1:0,inter:s.in?1:0,invT:s.iv?1:0,desafio:s.ds?{n:s.ds[0],t:s.ds[1]}:null,
     obs:(s.o||[]).map(o=>o[0]==='parede'?{k:'parede',x:o[1],gy:o[2],gap:o[3],w:o[4],emo:o[5]||undefined,mov:o[6]||0,vel:o[7]||undefined}
@@ -83,7 +85,7 @@ function vivoPasso(dt){ // entre um retrato e outro, o jogo continua andando soz
     for(const z of st.zonas)z.x-=st.vel*dt;
     for(const a of st.avisos){a.t-=dt;if(a.t<=0)a.ativo+=dt}
     if(st.desafio)st.desafio.t=Math.max(0,st.desafio.t-dt)}
-  if(R()<.6)st.parts.push(particulaRastro());
+  if(R()<.6)st.parts.push(particulaRastro(st.vivoSk?st.vivoSk.rastro:'padrao'));
   // sem notícia: a pessoa saiu, fechou o jogo ou está numa versão antiga
   const sem=(performance.now()-vivo.ultT)/1000;vivo.espera+=dt;
   const d=tel.dados,acabou=d&&(!d.vez||d.vez.uid!==vivo.uid||elosDe(d).some(e=>e.de===vivo.uid));

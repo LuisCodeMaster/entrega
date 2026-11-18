@@ -26,7 +26,7 @@ function roleta(txt,chave){
     setTimeout(passo,55+k*k*1.1)})();
 }
 function mostraSorte(jaTinha){
-  const c=rolFim,t=SORTES[SORTE_CANAL[c.id]]||SORTES.normal;if(!jaTinha)sfx(t.som);
+  const c=rolFim,t=SORTES[SORTE_CANAL[c.id]]||SORTES.normal;if(!jaTinha){sfx(t.som);if(SORTE_CANAL[c.id]==='lenda')contaPerfil('lendas');if(SORTE_CANAL[c.id]==='azar')contaPerfil('azares')}
   $('rolE').textContent=c.e;$('rolN').textContent=c.n;$('rol').classList.add('para');
   $('rolRes').innerHTML=`<div class="sorteTxt" style="color:${t.cor}">${t.e} ${t.n}</div>
     ${jaTinha?'<p class="dica">Luck had already decided this turn.</p>':''}

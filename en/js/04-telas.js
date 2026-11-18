@@ -244,8 +244,12 @@ $('card').addEventListener('click',e=>{
   if(a==='canalBloq'){toast('🔵 Bluetooth only carries messages up to 20 letters');return}
   if(a==='canalVolta'){canalAtual=null;fechaPainel();if(canalVolta)canalVolta();return}
   if(a==='visual')telaVisual();
-  if(a==='skin'){const [k,v]=n.split(':');perfil[k]=v;salvaPerfil();telaVisual()}
-  if(a==='nada'){const it=[...CORES_ENV,...RASTROS,...CARAS].find(x=>n.endsWith(':'+x.id));if(it)toast('🔒 Needs '+it.p+' points')}
+  if(a==='skin'){const [k,v]=n.split(':');const L={cor:CORES_ENV,rastro:RASTROS,cara:CARAS,ace:ACESSORIOS,selo:SELOS}[k],it=L&&L.find(x=>x.id===v),tt=k==='titulo'&&TITULOS.find(x=>x.id===v);
+    if((it&&perfil.pts>=it.p)||(tt&&tt.ok(perfil))){perfil[k]=v;salvaPerfil();if(k==='titulo')enviaRanking()}telaVisual()}
+  if(a==='visAba'){visAba=n;telaVisual()}
+  if(a==='visSorteia'){visSorteia();return}
+  if(a==='nadaTit'){const t=TITULOS.find(x=>'titulo:'+x.id===n);if(t)toast('🔒 '+t.d)}
+  if(a==='nada'){const it=LISTAS_PTS().find(x=>n.endsWith(':'+x.id));if(it)toast('🔒 Needs '+it.p+' points')}
   if(a==='ranking')telaRanking();
   if(a==='mural'){muralAba='top';telaMural()}
   if(a==='som'){alternaSom();telaInicio()}
