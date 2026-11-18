@@ -25,11 +25,6 @@ function telaInicio(){
     <label>The message</label><input id="texto" maxlength="60" value="Wanna play tonight?">
     <div class="erro" id="erro"></div>
     <button data-a="enviar">SEND ➤</button>`;
-  if(aba==='receber')corpo=`
-    <p style="font-size:14px">Someone sent you a package? Paste the text you got here.</p>
-    <textarea id="codigo" rows="5" placeholder="ENT-..."></textarea>
-    <div class="erro" id="erro"></div>
-    <button data-a="abrir">OPEN PACKAGE 📦</button>`;
   painel(`<h1 class="logo"><span class="env">✉️</span><span class="txt">ENTREGA!</span></h1>
     <div class="tag">THE MESSAGE'S JOURNEY</div>
     <p>You are a <b>message</b> traveling from one phone to another.</p>
@@ -39,7 +34,6 @@ function telaInicio(){
       <button class="${aba==='conversas'?'on':''}" data-a="aba" data-n="conversas">💬<br>Chat</button>
       <button class="${aba==='telefone'?'on':''}" data-a="aba" data-n="telefone">📞<br>Telephone</button>
       <button class="${aba==='enviar'?'on':''}" data-a="aba" data-n="enviar">✍️<br>Send</button>
-      <button class="${aba==='receber'?'on':''}" data-a="aba" data-n="receber">📦<br>Code</button>
     </div>${corpo}
     <div class="dica comoJoga">Phone: drag your finger (best in landscape). PC: arrows / WASD.<br>Grab 📶, dodge 🦠 🔥 📧. Against bosses you shoot ✓ automatically.</div>`);
 }
@@ -65,14 +59,16 @@ function telaFaseOk(){
 }
 function telaPassar(){
   const cod=codifica(J),prox=FASES[ROTAS[J.rota][J.pos]];
-  const share=`✉️ ${J.de} sent you a message in the game ENTREGA! It got to ${prox.nome} and now only you can finish the delivery.\n\nOpen the game: ${LINK}\nGo to "📦 Code" and paste this:\n${cod}`;
+  const link=LINK+'#p='+cod;
+  const share=`✉️ ${J.de} sent you a message in the game ENTREGA! It made it to ${prox.nome} and now only you can finish the delivery.\n\nTap to continue: ${link}`;
   painel(`<div class="grande">📤</div><h2>Your part is done!</h2>
     <p>Now it is up to <b>${esc(J.para)}</b>. Send the package on WhatsApp or anywhere.</p>
     ${rotaHtml()}
     <div class="bolha cinza">${esc(textoEstragado())}</div>
     <p style="font-size:14px">It reached halfway ${pctInteiro()}% intact.</p>
-    <textarea id="share" rows="5" readonly>${esc(share)}</textarea>
-    <button data-a="copiar">📋 COPY PACKAGE</button>
+    <textarea id="share" rows="4" readonly>${esc(share)}</textarea>
+    ${navigator.share?'<button class="rosa" data-a="compartilhar">📲 SEND TO A FRIEND</button>':''}
+    <button data-a="copiar">📋 COPY LINK</button>
     <div class="erro" id="erro"></div>
     <button class="sec" data-a="menu">MENU</button>`);
 }
@@ -120,6 +116,12 @@ function telaPerdeu(motivo){
     <button data-a="reenviar">🔁 RESEND</button>
     <button class="sec" data-a="menu">GIVE UP</button>`);
 }
+// abre um pacote vindo de link (#p=ENT-...) ou colado no campo de convite
+function abrePacote(txt){
+  const o=decodifica(txt);if(!o){toast('⚠️ This package is broken. Ask for the link again.');return false}
+  if(o.pos>=ROTAS[o.rota].length){toast('This package was already delivered.');return false}
+  J=o;modo='jornada';telaPacoteAberto();return true;
+}
 async function copiar(){
   const ta=$('share');if(!ta)return;
   try{await navigator.clipboard.writeText(ta.value);erro('');const b=document.querySelector('[data-a="copiar"]');if(b)b.textContent='✓ COPIED!'}
@@ -134,11 +136,7 @@ $('card').addEventListener('click',e=>{
     if(!de||!para)return erro('Fill in both names.');if(t.replace(/ /g,'').length<3)return erro('Write a slightly longer message.');
     ls.set('entrega_nome',de);J=novaJornada(de,para,t,'ida');modo='jornada';escolheCanal(t,jogarJ,()=>telaInicio());
   }
-  if(a==='abrir'){
-    const o=decodifica($('codigo').value);if(!o)return erro('Invalid code. Make sure you copied everything, starting with ENT-');
-    if(o.pos>=ROTAS[o.rota].length)return erro('This package was already delivered.');
-    J=o;modo='jornada';telaPacoteAberto();
-  }
+  if(a==='compartilhar'){const t=$('share');if(t&&navigator.share)navigator.share({text:t.value}).catch(()=>{})}
   if(a==='continuar')escolheCanal(J.txt,jogarJ,()=>J.pos?telaFaseOk():telaPacoteAberto());
   if(a==='reenviar'){J.falhas++;corromper(perdaPorDano()*2);J.vidas=3;J.sinal=100;jogarJ()}
   if(a==='copiar')copiar();

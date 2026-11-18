@@ -74,7 +74,6 @@ T = [
  ('<p>Você é uma <b>mensagem</b> viajando de um celular para o outro.</p>', '<p>You are a <b>message</b> traveling from one phone to another.</p>'),
  ('📊 Mural</button>', '📊 Wall</button>'),
  ('💬<br>Conversa</button>', '💬<br>Chat</button>'), ('📞<br>Telefone</button>', '📞<br>Telephone</button>'),
- ('✍️<br>Enviar</button>', '✍️<br>Send</button>'), ('📦<br>Código</button>', '📦<br>Code</button>'),
  ('Celular: arraste o dedo (melhor deitado). PC: setas / WASD.<br>Pegue 📶, desvie de 🦠 🔥 📧. No chefe, você atira ✓ sozinho.',
   'Phone: drag your finger (best in landscape). PC: arrows / WASD.<br>Grab 📶, dodge 🦠 🔥 📧. Against bosses you shoot ✓ automatically.'),
  ('<label>Seu nome</label>', '<label>Your name</label>'),
@@ -320,6 +319,15 @@ T = [
  ('<button class="rosa" data-a="lobbyNovaTel">➕ 📞 CRIAR UMA RODA</button>', '<button class="rosa" data-a="lobbyNovaTel">➕ 📞 START A CIRCLE</button>'),
  ('<div class="tag">A JORNADA DA MENSAGEM</div>', '<div class="tag">THE MESSAGE\'S JOURNEY</div>'),
 
+
+ # ---------- pacote por link ----------
+ ('data-n="enviar">✍️<br>Enviar</button>', 'data-n="enviar">✍️<br>Send</button>'),
+ ("const share=`✉️ ${J.de} te mandou uma mensagem no jogo ENTREGA! Ela chegou até ${prox.nome} e agora só você pode terminar a entrega.\\n\\nToque para continuar: ${link}`;", "const share=`✉️ ${J.de} sent you a message in the game ENTREGA! It made it to ${prox.nome} and now only you can finish the delivery.\\n\\nTap to continue: ${link}`;"),
+ ("'<button class=\"rosa\" data-a=\"compartilhar\">📲 MANDAR PRO AMIGO</button>'", "'<button class=\"rosa\" data-a=\"compartilhar\">📲 SEND TO A FRIEND</button>'"),
+ ('<button data-a="copiar">📋 COPIAR LINK</button>', '<button data-a="copiar">📋 COPY LINK</button>'),
+ ("toast('⚠️ Esse pacote está quebrado. Peça o link de novo.')", "toast('⚠️ This package is broken. Ask for the link again.')"),
+ ("toast('Esse pacote já foi entregue.')", "toast('This package was already delivered.')"),
+
  # ---------- mural ----------
  ("toast('Precisa de pelo menos 2 entregas')", "toast('Needs at least 2 deliveries')"),
  ("toast('📊 Publicado no mural!')", "toast('📊 Posted to the wall!')"),
@@ -382,12 +390,8 @@ T = [
  ('<label>Para quem</label>', '<label>To</label>'), ('<label>A mensagem</label>', '<label>The message</label>'),
  ('value="Bora jogar hoje à noite?"', 'value="Wanna play tonight?"'),
  ('<button data-a="enviar">ENVIAR ➤</button>', '<button data-a="enviar">SEND ➤</button>'),
- ('<p style="font-size:14px">Alguém te mandou um pacote? Cole aqui o texto que você recebeu.</p>', '<p style="font-size:14px">Someone sent you a package? Paste the text you got here.</p>'),
- ('<button data-a="abrir">ABRIR PACOTE 📦</button>', '<button data-a="abrir">OPEN PACKAGE 📦</button>'),
  ("return erro('Preencha os dois nomes.');", "return erro('Fill in both names.');"),
  ("if(t.replace(/ /g,'').length<3)return erro('Escreva uma mensagem um pouco maior.');\n    ls.set('entrega_nome',de);", "if(t.replace(/ /g,'').length<3)return erro('Write a slightly longer message.');\n    ls.set('entrega_nome',de);"),
- ("return erro('Código inválido. Confira se copiou tudo, começando em ENT-');", "return erro('Invalid code. Make sure you copied everything, starting with ENT-');"),
- ("return erro('Esse pacote já foi entregue.');", "return erro('This package was already delivered.');"),
  ("return erro('Escreva uma resposta um pouco maior.');", "return erro('Write a slightly longer reply.');"),
  ('<h2>Pacote de ${esc(J.de)}</h2>', '<h2>Package from ${esc(J.de)}</h2>'),
  ("<p>Uma mensagem ${J.rota==='volta'?'de resposta ':''}para <b>${esc(J.para)}</b> parou no meio do caminho e precisa de você pra chegar.</p>", "<p>A ${J.rota==='volta'?'reply ':''}message for <b>${esc(J.para)}</b> stopped halfway and needs you to arrive.</p>"),
@@ -396,11 +400,8 @@ T = [
  ('<h2>${esc(f.chefe.nome)} derrotado!</h2>', '<h2>${esc(f.chefe.nome)} defeated!</h2>'),
  ('<p style="font-size:14px">Mensagem ${pctInteiro()}% inteira · +1 vida (${J.vidas} ✉️)</p>', '<p style="font-size:14px">Message ${pctInteiro()}% intact · +1 life (${J.vidas} ✉️)</p>'),
  ('<button data-a="continuar">PRÓXIMA FASE ➤</button>', '<button data-a="continuar">NEXT STAGE ➤</button>'),
- ("const share=`✉️ ${J.de} te mandou uma mensagem no jogo ENTREGA! Ela chegou até ${prox.nome} e agora só você pode terminar a entrega.\\n\\nAbra o jogo: ${LINK}\\nVá em \"📦 Código\" e cole isto:\\n${cod}`;",
-  "const share=`✉️ ${J.de} sent you a message in the game ENTREGA! It got to ${prox.nome} and now only you can finish the delivery.\\n\\nOpen the game: ${LINK}\\nGo to \"📦 Code\" and paste this:\\n${cod}`;"),
  ('<div class="grande">📤</div><h2>Sua parte acabou!</h2>\n    <p>Agora é com <b>${esc(J.para)}</b>. Mande o pacote pelo WhatsApp ou onde quiser.</p>', '<div class="grande">📤</div><h2>Your part is done!</h2>\n    <p>Now it is up to <b>${esc(J.para)}</b>. Send the package on WhatsApp or anywhere.</p>'),
  ('<p style="font-size:14px">Chegou ${pctInteiro()}% inteira na metade do caminho.</p>', '<p style="font-size:14px">It reached halfway ${pctInteiro()}% intact.</p>'),
- ('<button data-a="copiar">📋 COPIAR PACOTE</button>', '<button data-a="copiar">📋 COPY PACKAGE</button>'),
  ('<h2 class="ok">Chegou pra você, ${esc(J.para)}!</h2>\n    <p>Mas a mensagem de <b>${esc(J.de)}</b> se estragou no caminho:</p>', '<h2 class="ok">It arrived, ${esc(J.para)}!</h2>\n    <p>But <b>${esc(J.de)}</b>\'s message got broken on the way:</p>'),
  ('<label>O que você acha que ${esc(J.de)} escreveu?</label>', '<label>What do you think ${esc(J.de)} wrote?</label>'),
  ("CONFERIR ✓✓</button>`);", "CHECK ✓✓</button>`);"),

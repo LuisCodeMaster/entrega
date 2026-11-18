@@ -183,7 +183,7 @@
   .abas button{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#b9c1e6;border-radius:12px;transition:transform .12s,background .12s}
   .abas button:hover{background:rgba(255,255,255,.1)}
   .abas button.on{background:linear-gradient(180deg,#7dffc4,#46dc96);color:#08321d;border-color:transparent;box-shadow:0 6px 18px rgba(92,240,168,.3)}
-  .abas.modos{gap:8px;margin:12px 0 8px;grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  .abas.modos{gap:8px;margin:12px 0 8px;grid-template-columns:repeat(3,minmax(0,1fr))!important}
   .abas>button{min-width:0}
   .abas.modos button{padding:9px 4px 7px;font-size:13.5px;border-radius:16px;line-height:1.05}
   .abas.modos button::first-line{font-size:24px;line-height:1.25}

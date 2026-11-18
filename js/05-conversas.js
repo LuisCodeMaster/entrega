@@ -106,7 +106,7 @@ async function acaoConversa(a,n){
     aba='conversas';telaInicio();toast(a==='remConvTudo'?'🗑️ Conversa e suas mensagens apagadas':'Conversa removida da lista');return true}
   if(a==='novaConv'){pegaNome();const cid=novoCid();salvaConv(cid,{outro:'',criei:true});abrirChat(cid,true);return true}
   if(a==='entrarConv'||a==='abrirConv'){pegaNome();abrirChat(n);return true}
-  if(a==='entrarConvLink'){pegaNome();const cid=cidDe($('convLink').value.trim());if(!cid){erro('Link inválido. Cole o link inteiro que seu amigo mandou.');return true}abrirChat(cid);return true}
+  if(a==='entrarConvLink'){pegaNome();if(/ENT-/.test($('convLink').value)){abrePacote($('convLink').value);return true}const cid=cidDe($('convLink').value.trim());if(!cid){erro('Link inválido. Cole o link inteiro que seu amigo mandou.');return true}abrirChat(cid);return true}
   if(a==='tentarChat'){iniciaEntrega(J.txt,st.mimoEnviar);return true}
   if(a==='cancelarChat'){const mi=st.mimoEnviar;mostraChat();$('chTexto').value=J?J.txt:'';mimoSel=mi;atualizaMimoBtn();return true}
   return false;
